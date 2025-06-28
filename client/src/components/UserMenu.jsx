@@ -11,21 +11,25 @@ import Axios from "../utils/Axios";
 import { useNavigate } from "react-router-dom";
 import { FaLink } from "react-icons/fa6";
 import isAdmin from "../utils/isAdmin";
+import { useModal } from "../context/ModalContext";
 
-const userMenu = ({ close }) => {
+const UserMenu = ({ close }) => {
   const user = useSelector((state) => state.user);
   const disPatch = useDispatch();
   const navigate = useNavigate();
   const { showSuccess } = useNotification();
   const axiosNotificationError = useAxiosNotificationError();
-
+  const { openCreateShopModal } = useModal();
+  
   const handleLogout = async () => {
     try {
       const response = await Axios({
         url: summaryApi.logout.url,
         method: summaryApi.logout.method,
         withCredentials: true,
-      });      if (response.data.success) {
+      });
+
+      if (response.data.success) {
         if (close) {
           close();
         }
@@ -34,23 +38,6 @@ const userMenu = ({ close }) => {
         localStorage.clear();
         showSuccess(response.data.message);
         navigate("/");
-      }
-    } catch (error) {
-      axiosNotificationError(error);
-    }
-  };
-
-  const handleBecomeSeller = async () => {
-    try {
-      const response = await Axios({
-        url: summaryApi.becomeSeller.url,
-        method: summaryApi.becomeSeller.method,
-        withCredentials: true,
-      });
-      if (response.data.success) {
-        showSuccess(response.data.message);
-        // Optionally, update Redux user state here (requires a Redux action to set role to seller)
-        window.location.reload(); // Quick way to refresh role in UI
       }
     } catch (error) {
       axiosNotificationError(error);
@@ -78,16 +65,11 @@ const userMenu = ({ close }) => {
         >
           <FaLink size={15} />
         </Link>
-      </div>
-
-      <Divider />
-
-      {user.role === "user" && (
-        <button
-          onClick={handleBecomeSeller}
-          className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-3 py-1 rounded mb-2"
+      </div>      <Divider />      {user.role === "user" && (        <button
+          onClick={() => openCreateShopModal(() => close && close())}
+          className="rounded px-3 py-2 font-medium bg-emerald-50 hover:bg-emerald-200 text-emerald-800 transition w-full text-left"
         >
-          Become a Seller
+          🏪 Create Your Shop
         </button>
       )}
 
@@ -139,6 +121,14 @@ const userMenu = ({ close }) => {
             className="rounded px-3 py-2 font-medium bg-orange-50 hover:bg-orange-200 text-orange-800 transition"
           >
             Seller Orders
+          </Link>        )}
+        {(isAdmin(user.role) || user.role === "seller") && (
+          <Link
+            to={"/dashboard/my-shop"}
+            onClick={close}
+            className="rounded px-3 py-2 font-medium bg-purple-50 hover:bg-purple-200 text-purple-800 transition"
+          >
+            🏪 My Shop
           </Link>
         )}
         <Link
@@ -155,8 +145,7 @@ const userMenu = ({ close }) => {
         >
           Chat
         </Link>
-        {isAdmin(user.role) && (
-          <Link
+        {isAdmin(user.role) && (          <Link
             to={"/dashboard/admin-chat-history"}
             onClick={close}
             className="rounded px-3 py-2 font-medium bg-blue-50 hover:bg-blue-200 text-blue-800 transition"
@@ -164,15 +153,22 @@ const userMenu = ({ close }) => {
             Admin Chat History
           </Link>
         )}
-        <button
+        {isAdmin(user.role) && (
+          <Link
+            to={"/dashboard/manage-shops"}
+            onClick={close}
+            className="rounded px-3 py-2 font-medium bg-red-50 hover:bg-red-200 text-red-800 transition"
+          >
+            Manage All Shops
+          </Link>
+        )}        <button
           onClick={handleLogout}
           className="text-left text-red-500 font-semibold hover:underline mt-2"
-        >
-          Log Out
+        >        Log Out
         </button>
       </div>
     </div>
   );
 };
 
-export default userMenu;
+export default UserMenu;

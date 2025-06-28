@@ -3,6 +3,7 @@ import React, { createContext, useContext, useReducer, useCallback } from 'react
 // Action types
 const ADD_NOTIFICATION = 'ADD_NOTIFICATION';
 const REMOVE_NOTIFICATION = 'REMOVE_NOTIFICATION';
+const REMOVE_NOTIFICATIONS_BY_TYPE = 'REMOVE_NOTIFICATIONS_BY_TYPE';
 const CLEAR_ALL_NOTIFICATIONS = 'CLEAR_ALL_NOTIFICATIONS';
 
 // Initial state
@@ -23,6 +24,13 @@ const notificationReducer = (state, action) => {
         ...state,
         notifications: state.notifications.filter(
           notification => notification.id !== action.payload
+        )
+      };
+    case REMOVE_NOTIFICATIONS_BY_TYPE:
+      return {
+        ...state,
+        notifications: state.notifications.filter(
+          notification => notification.category !== action.payload
         )
       };
     case CLEAR_ALL_NOTIFICATIONS:
@@ -70,10 +78,14 @@ export const NotificationProvider = ({ children }) => {
     });
     return id;
   }, [generateId]);
-
   // Remove notification
   const removeNotification = useCallback((id) => {
     dispatch({ type: REMOVE_NOTIFICATION, payload: id });
+  }, []);
+
+  // Remove notifications by category
+  const removeNotificationsByCategory = useCallback((category) => {
+    dispatch({ type: REMOVE_NOTIFICATIONS_BY_TYPE, payload: category });
   }, []);
 
   // Clear all notifications
@@ -118,11 +130,11 @@ export const NotificationProvider = ({ children }) => {
   const showCustom = useCallback((config) => {
     return addNotification(config);
   }, [addNotification]);
-
   const value = {
     notifications: state.notifications,
     addNotification,
     removeNotification,
+    removeNotificationsByCategory,
     clearAllNotifications,
     showSuccess,
     showError,

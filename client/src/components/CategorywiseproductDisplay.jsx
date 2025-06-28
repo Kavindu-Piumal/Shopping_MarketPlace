@@ -106,7 +106,7 @@ const CategorywiseproductDisplay = ({ id, name }) => {
         </button>
 
         <div
-          className="flex items-center gap-4 md:gap-6 lg:gap-8 container mx-auto px-4 overflow-x-scroll scrollbar-none scroll-smooth"
+          className="flex items-stretch gap-4 md:gap-6 lg:gap-8 container mx-auto px-4 overflow-x-scroll scrollbar-none scroll-smooth"
           ref={containerRef}
         >
           {loading &&

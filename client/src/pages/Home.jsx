@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import validUrl from "../utils/validUrl";
 import { Link, useNavigate } from "react-router-dom";
 import CategorywiseproductDisplay from "../components/CategorywiseproductDisplay";
-import { FaLeaf, FaRecycle, FaHeart, FaShoppingBag, FaArrowRight } from "react-icons/fa";
+import { FaLeaf, FaRecycle, FaHeart, FaShoppingBag, FaArrowRight, FaStore } from "react-icons/fa";
 
 const Home = () => {
   const loadingCategory = useSelector((state) => state.product.loadingCategory);
@@ -39,6 +39,9 @@ const Home = () => {
     const url = `/${validUrl(category) || ""}-${id}/${
       validUrl(subcategory.name) || ""
     }-${subcategory._id}`;
+    
+    // Scroll to top smoothly before navigation
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     navigate(url);
   };
   return (
@@ -131,8 +134,7 @@ const Home = () => {
                     </div>
                   );
                 })}
-          </div>
-        </div>        {/* */}
+          </div>        </div>{/* */}
         {categoryData
           .filter(c => c && c._id && c.name) // Filter out null/invalid categories
           .map((c, index) => {

@@ -17,23 +17,19 @@ const AddtoCartButton = ({ data }) => {
   const user = useSelector((state) => state.user);
   const [isAvailableCart, setIsAvailableCart] = useState(false);
   const [qty, setQty] = useState(0);
-  const [cartItemDetails, setCartItemDetails] = useState();
-  const [lastToastTime, setLastToastTime] = useState(0);
+  const [cartItemDetails, setCartItemDetails] = useState();  const [lastToastTime, setLastToastTime] = useState(0);
   const navigate = useNavigate();
-  const { showSuccess, showCustom, showError } = useNotification();
+  const { showSuccess, showCustom, showError, removeNotificationsByCategory } = useNotification();
   const axiosNotificationError = useAxiosNotificationError();
 
-  // Function to show login notification with debounce
+  // Function to show login notification with replacement of previous login notifications
   const showLoginNotification = () => {
-    const now = Date.now();
-    // Prevent multiple notifications within 3 seconds
-    if (now - lastToastTime < 3000) {
-      return;
-    }
-    setLastToastTime(now);
+    // Remove any existing login notifications first
+    removeNotificationsByCategory('login-required');
     
     showCustom({
       type: 'warning',
+      category: 'login-required', // Add category for easy identification
       title: 'Login Required',
       message: 'Please login to add items to cart',
       customContent: (
@@ -45,7 +41,7 @@ const AddtoCartButton = ({ data }) => {
         </button>
       )
     });
-  };  const handleADDToCart = async (e) => {
+  };const handleADDToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -112,7 +108,7 @@ const AddtoCartButton = ({ data }) => {
     
     // Check if user is logged in
     if (!user?._id) {
-      showLoginToast();
+      showLoginNotification();
       return;
     }
     
@@ -123,7 +119,7 @@ const AddtoCartButton = ({ data }) => {
 
     // Check if user is logged in
     if (!user?._id) {
-      showLoginToast();
+      showLoginNotification();
       return;
     }
 

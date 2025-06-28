@@ -26,6 +26,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
     const [showCompleteOrderConfirm, setShowCompleteOrderConfirm] = useState(false);
     const [showReviewPrompt, setShowReviewPrompt] = useState(false);
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const navigate = useNavigate();
     const { socket, isConnected, sendMessage, emitTyping, emitStopTyping } = useSocket();
@@ -45,6 +46,9 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
             
             if (response.data.success) {
                 setMessages(response.data.data);
+                // Force scroll to bottom after messages are loaded for new chat
+                // Use longer timeout to ensure all DOM updates are complete
+                setTimeout(() => scrollToBottom(true), 300);
             }
         } catch (error) {
             axiosNotificationError(error);
@@ -137,7 +141,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
 
     // Scroll to bottom when messages change
     useEffect(() => {
-        scrollToBottom();
+        scrollToBottom(false); // Don't force scroll for regular message updates
     }, [messages]);
 
     // Socket event listeners
@@ -213,8 +217,23 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
         }
     }, [chat]);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = (force = false) => {
+        // Use setTimeout to ensure DOM is updated before scrolling
+        setTimeout(() => {
+            if (messagesContainerRef.current) {
+                const container = messagesContainerRef.current;
+                const isAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 100;
+                
+                // Only scroll if forced (new chat selected) or user is already at bottom
+                if (force || isAtBottom) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+            // Also try the old method as fallback
+            if (force) {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 100);
     };
 
     const handleSendMessage = async (messageContent = newMessage, messageType = 'text') => {
@@ -456,7 +475,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-green-50/30 to-emerald-50/30">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-green-50/30 to-emerald-50/30">
                 {loading ? (
                     <div className="flex justify-center py-8">
                         <div className="animate-spin w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full"></div>

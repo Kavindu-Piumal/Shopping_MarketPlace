@@ -1,7 +1,7 @@
 import React from 'react';
 import Loading from './Loading';
 
-const ChatList = ({ chats, selectedChat, onChatSelect, loading, user }) => {
+const ChatList = ({ chats, selectedChat, onChatSelect, loading, user, isMobile = false }) => {
     const formatLastMessageTime = (timestamp) => {
         const date = new Date(timestamp);
         const now = new Date();
@@ -48,10 +48,12 @@ const ChatList = ({ chats, selectedChat, onChatSelect, loading, user }) => {
 
     return (
         <div className="h-full overflow-y-auto">
-            <div className="p-4 border-b border-emerald-100">
-                <h3 className="font-semibold text-emerald-800">Your Conversations</h3>
-                <p className="text-xs text-emerald-600">{chats.length} active chat{chats.length !== 1 ? 's' : ''}</p>
-            </div>
+            {!isMobile && (
+                <div className="p-4 border-b border-emerald-100">
+                    <h3 className="font-semibold text-emerald-800">Your Conversations</h3>
+                    <p className="text-xs text-emerald-600">{chats.length} active chat{chats.length !== 1 ? 's' : ''}</p>
+                </div>
+            )}
             
             <div className="space-y-0">
                 {chats.map((chat) => {
@@ -63,22 +65,22 @@ const ChatList = ({ chats, selectedChat, onChatSelect, loading, user }) => {
                         <div
                             key={chat._id}
                             onClick={() => onChatSelect(chat)}
-                            className={`p-4 cursor-pointer border-b border-emerald-50 hover:bg-emerald-50/50 transition-colors ${
+                            className={`${isMobile ? 'p-4' : 'p-4'} cursor-pointer border-b border-emerald-50 hover:bg-emerald-50/50 transition-colors ${
                                 isSelected ? 'bg-emerald-100 border-l-4 border-l-emerald-400' : ''
                             }`}
                         >
-                            <div className="flex items-start gap-3">
-                                {/* Product Image */}
-                                <img
-                                    src={chat.productId?.image?.[0] || '/placeholder-product.png'}
-                                    alt={chat.productId?.name || 'Product'}
-                                    className="w-12 h-12 rounded-lg object-cover border-2 border-emerald-200"
-                                />
+                            <div className={`flex items-start gap-${isMobile ? '4' : '3'}`}>
+                                {/* User Avatar */}
+                                <div className={`${isMobile ? 'w-12 h-12' : 'w-10 h-10'} bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0`}>
+                                    <span className="text-emerald-600 font-medium text-sm">
+                                        {otherUser.name?.[0]?.toUpperCase()}
+                                    </span>
+                                </div>
                                 
                                 <div className="flex-1 min-w-0">
                                     {/* User and Role */}
                                     <div className="flex items-center justify-between mb-1">
-                                        <h4 className="font-medium text-emerald-900 truncate">
+                                        <h4 className={`font-medium text-emerald-900 truncate ${isMobile ? 'text-base' : 'text-sm'}`}>
                                             {otherUser.name}
                                         </h4>
                                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -91,19 +93,31 @@ const ChatList = ({ chats, selectedChat, onChatSelect, loading, user }) => {
                                     </div>
                                     
                                     {/* Product Name */}
-                                    <p className="text-sm text-emerald-700 truncate mb-1">
-                                        {chat.productId?.name}
-                                    </p>
-                                      {/* Order ID or Product Chat Indicator */}
+                                    {chat.productId && (
+                                        <p className={`text-emerald-700 truncate mb-1 ${isMobile ? 'text-sm' : 'text-xs'}`}>
+                                            📦 {chat.productId.name}
+                                        </p>
+                                    )}
+                                    
+                                    {/* Order ID or Product Chat Indicator */}
                                     {chat.orderId ? (
                                         <p className="text-xs text-emerald-500">
                                             Order: {chat.orderId?.orderId}
                                         </p>
                                     ) : (
                                         <p className="text-xs text-blue-500">
-                                            Product Inquiry
+                                            💬 Product Inquiry
                                         </p>
-                                    )}                                      {/* Status and Time */}
+                                    )}
+                                    
+                                    {/* Last Message Preview */}
+                                    {chat.lastMessage && (
+                                        <p className={`text-gray-600 truncate mt-1 ${isMobile ? 'text-sm' : 'text-xs'}`}>
+                                            {chat.lastMessage.content}
+                                        </p>
+                                    )}
+                                    
+                                    {/* Status and Time */}
                                     <div className="flex items-center justify-between mt-2">
                                         <div className="flex items-center gap-2">
                                             <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -121,23 +135,16 @@ const ChatList = ({ chats, selectedChat, onChatSelect, loading, user }) => {
                                             }`}>
                                                 {chat.orderId ? (
                                                     chat.orderCompleted 
-                                                        ? 'Completed' 
+                                                        ? '✅ Completed' 
                                                         : chat.orderConfirmed 
-                                                            ? 'Confirmed' 
+                                                            ? '✅ Confirmed' 
                                                             : chat.isActive 
-                                                                ? 'Active' 
-                                                                : 'Inactive'
+                                                                ? '🟢 Active' 
+                                                                : '⭕ Inactive'
                                                 ) : (
-                                                    'Product Chat'
+                                                    '💬 Chat'
                                                 )}
                                             </span>
-                                            
-                                            {/* Show encryption indicator */}
-                                            <div className="flex items-center gap-1" title="End-to-end encrypted">
-                                                <svg className="w-3 h-3 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                                </svg>
-                                            </div>
                                             
                                             {/* Show unread message indicator */}
                                             {chat.hasUnreadMessages && (
@@ -145,35 +152,25 @@ const ChatList = ({ chats, selectedChat, onChatSelect, loading, user }) => {
                                             )}
                                         </div>
                                         
-                                        <span className="text-xs text-emerald-400">
-                                            {formatLastMessageTime(chat.updatedAt)}
-                                        </span>
-                                    </div>
-                                    
-                                    {/* Last Message Preview */}
-                                    {chat.lastMessage && (
-                                        <div className="mt-2 text-xs text-emerald-600 truncate">
-                                            {chat.lastMessage.messageType === 'system' ? (
-                                                <span className="italic">System: {chat.lastMessage.content}</span>
-                                            ) : chat.lastMessage.messageType === 'image' ? (
-                                                <span className="flex items-center gap-1">
-                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                                                    </svg>
-                                                    Photo
-                                                </span>
-                                            ) : chat.lastMessage.messageType === 'voice' ? (
-                                                <span className="flex items-center gap-1">
-                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                                                    </svg>
-                                                    Voice message
-                                                </span>
-                                            ) : (
-                                                chat.lastMessage.content
+                                        <div className="flex items-center gap-2">
+                                            {/* Show encryption indicator */}
+                                            <div className="flex items-center gap-1" title="Encrypted">
+                                                <svg className="w-3 h-3 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                            
+                                            <span className="text-xs text-emerald-400">
+                                                {formatLastMessageTime(chat.updatedAt)}
+                                            </span>
+                                            
+                                            {isMobile && (
+                                                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                                </svg>
                                             )}
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

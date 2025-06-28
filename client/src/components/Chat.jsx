@@ -8,18 +8,21 @@ import { useNotification } from '../context/NotificationContext';
 import ChatList from './ChatList';
 import ChatWindow from './ChatWindow';
 import PrivacyConsentBanner from './PrivacyConsentBanner';
+import useMobile from '../hooks/useMobile';
 
 const Chat = () => {
     const [selectedChat, setSelectedChat] = useState(null);
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(false);
     const [lastNotificationTime, setLastNotificationTime] = useState(0);
+    const [showMobileChatWindow, setShowMobileChatWindow] = useState(false);
     const [searchParams] = useSearchParams();
     const { socket, isConnected, joinChat } = useSocket();
     const { showCustom, showSuccess, axiosNotificationError } = useNotification();
     const user = useSelector(state => state.user);
     const navigate = useNavigate();
     const location = useLocation();
+    const [isMobile] = useMobile();
 
     // Debounced login notification (similar to AddtoCartButton)
     const showLoginNotification = () => {
@@ -194,6 +197,15 @@ const Chat = () => {
         if (chat && chat._id) {
             joinChat(chat._id);
         }
+        // On mobile, show the chat window when a chat is selected
+        if (isMobile) {
+            setShowMobileChatWindow(true);
+        }
+    };
+
+    const handleBackToChats = () => {
+        setShowMobileChatWindow(false);
+        setSelectedChat(null);
     };    const handleChatUpdate = (updatedChat) => {
         if (updatedChat.deleted) {
             // Remove deleted chat from list or mark as deleted
@@ -292,39 +304,102 @@ const Chat = () => {
                         </div>
                     ) : (
                         // Authenticated User Chat Interface
-                        <div className="flex h-[600px]">
-                            {/* Chat List */}
-                            <div className="w-1/3 border-r border-emerald-100">
-                                <ChatList
-                                    chats={chats}
-                                    selectedChat={selectedChat}
-                                    onChatSelect={handleChatSelect}
-                                    loading={loading}
-                                    user={user}
-                                />
-                            </div>
-
-                            {/* Chat Window */}
-                            <div className="flex-1">
-                                {selectedChat ? (
-                                    <ChatWindow
-                                        chat={selectedChat}
-                                        user={user}
-                                        onChatUpdate={handleChatUpdate}
-                                    />
+                        isMobile ? (
+                            // Mobile Layout - Show either chat list or chat window
+                            <div className="h-[600px]">
+                                {!showMobileChatWindow ? (
+                                    // Mobile Chat List Only
+                                    <div className="h-full">
+                                        <div className="p-4 border-b border-emerald-100">
+                                            <h2 className="text-lg font-semibold text-emerald-800">Your Conversations</h2>
+                                        </div>
+                                        <ChatList
+                                            chats={chats}
+                                            selectedChat={selectedChat}
+                                            onChatSelect={handleChatSelect}
+                                            loading={loading}
+                                            user={user}
+                                            isMobile={true}
+                                        />
+                                    </div>
                                 ) : (
-                                    <div className="h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-lime-50">
-                                        <div className="text-center text-emerald-600">
-                                            <svg className="w-16 h-16 mx-auto mb-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                            </svg>
-                                            <p className="text-lg font-medium">Select a chat to start messaging</p>
-                                            <p className="text-sm text-emerald-500 mt-1">Choose a conversation from the left panel</p>
+                                    // Mobile Chat Window with Back Button
+                                    <div className="h-full flex flex-col">
+                                        <div className="p-4 border-b border-emerald-100 flex items-center gap-3">
+                                            <button
+                                                onClick={handleBackToChats}
+                                                className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-full transition"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5m7-7l-7 7 7 7" />
+                                                </svg>
+                                            </button>
+                                            <div className="flex items-center gap-3">
+                                                {selectedChat && (
+                                                    <>
+                                                        <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                            <span className="text-emerald-600 font-medium text-sm">
+                                                                {(selectedChat.buyerId._id === user._id ? selectedChat.sellerId.name : selectedChat.buyerId.name)?.[0]?.toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                        <h3 className="font-medium text-emerald-800">
+                                                            {selectedChat.buyerId._id === user._id ? selectedChat.sellerId.name : selectedChat.buyerId.name}
+                                                        </h3>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            {selectedChat && (
+                                                <ChatWindow
+                                                    chat={selectedChat}
+                                                    user={user}
+                                                    onChatUpdate={handleChatUpdate}
+                                                    isMobile={true}
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        ) : (
+                            // Desktop Layout - Split View
+                            <div className="flex h-[600px]">
+                                {/* Chat List */}
+                                <div className="w-1/3 border-r border-emerald-100">
+                                    <ChatList
+                                        chats={chats}
+                                        selectedChat={selectedChat}
+                                        onChatSelect={handleChatSelect}
+                                        loading={loading}
+                                        user={user}
+                                        isMobile={false}
+                                    />
+                                </div>
+
+                                {/* Chat Window */}
+                                <div className="flex-1">
+                                    {selectedChat ? (
+                                        <ChatWindow
+                                            chat={selectedChat}
+                                            user={user}
+                                            onChatUpdate={handleChatUpdate}
+                                            isMobile={false}
+                                        />
+                                    ) : (
+                                        <div className="h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-lime-50">
+                                            <div className="text-center text-emerald-600">
+                                                <svg className="w-16 h-16 mx-auto mb-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                </svg>
+                                                <p className="text-lg font-medium">Select a chat to start messaging</p>
+                                                <p className="text-sm text-emerald-500 mt-1">Choose a conversation from the left panel</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )
                     )}
                 </div>
             </div>

@@ -7,9 +7,30 @@ import summaryApi from '../common/summaryApi';
 
 const ChatWithSellerButton = ({ product, className = "" }) => {
     const [loading, setLoading] = useState(false);
-    const { showSuccess, showError, axiosNotificationError } = useNotification();
+    const { showSuccess, showError, showCustom, removeNotificationsByCategory, axiosNotificationError } = useNotification();
     const user = useSelector(state => state.user);
     const navigate = useNavigate();
+    
+    // Function to show login notification with replacement of previous login notifications
+    const showLoginNotification = () => {
+        // Remove any existing login notifications first
+        removeNotificationsByCategory('login-required');
+        
+        showCustom({
+            type: 'warning',
+            category: 'login-required', // Add category for easy identification
+            title: 'Login Required',
+            message: 'Please login to chat with seller',
+            customContent: (
+                <button
+                    onClick={() => navigate("/login")}
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium transition-all duration-200 transform hover:scale-105 mt-2"
+                >
+                    Login
+                </button>
+            )
+        });
+    };
     
     // Don't render the button if the current user is the seller
     if (user?._id && product?.sellerId === user._id) {
@@ -20,8 +41,7 @@ const ChatWithSellerButton = ({ product, className = "" }) => {
         e.preventDefault();
         e.stopPropagation();        // Check if user is logged in
         if (!user?._id) {
-            showError('Please login to chat with seller');
-            navigate('/login');
+            showLoginNotification();
             return;
         }
 

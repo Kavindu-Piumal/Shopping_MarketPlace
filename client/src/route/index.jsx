@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import Home from "../pages/Home";
 import SearchPage from "../pages/SearchPage";
+import HotDealsPage from "../pages/HotDealsPage";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/forgotPassword";
@@ -28,6 +29,10 @@ import ChatPage from "../pages/ChatPage";
 import AdminChatHistory from "../components/AdminChatHistory";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import SellerOrders from "../pages/SellerOrders";
+import ShopsPage from "../pages/ShopsPage";
+import ShopDetailPage from "../pages/ShopDetailPage";
+import MyShop from "../pages/MyShop";
+import ManageShops from "../pages/ManageShops";
 
 
 const router = createBrowserRouter([
@@ -42,6 +47,10 @@ const router = createBrowserRouter([
       {
         path: "search",
         element: <SearchPage/>
+      },
+      {
+        path: "hot-deals",
+        element: <HotDealsPage/>
       },
       {
         path: "login",
@@ -77,10 +86,12 @@ const router = createBrowserRouter([
           },          {
             path: "myorders",
             element:<MyOrders/>
-          },
-          {
+          },          {
             path: "seller-orders",
             element: <AdminPermission><SellerOrders/></AdminPermission>
+          },          {
+            path: "my-shop",
+            element: <AdminPermission><MyShop/></AdminPermission>
           },
           {
             path: "address",
@@ -100,10 +111,13 @@ const router = createBrowserRouter([
           },          {
             path: "product",
             element: <AdminPermission><ProductAdmin/></AdminPermission>
-          },
-          {
+          },          {
             path: "admin-chat-history",
             element: <AdminPermission><AdminChatHistory/></AdminPermission>
+          },
+          {
+            path: "manage-shops",
+            element: <AdminPermission><ManageShops/></AdminPermission>
           }
       
       ]
@@ -138,10 +152,17 @@ const router = createBrowserRouter([
       },      {
         path: "/chat",
         element: <ChatPage/>
-      },
-      {
+      },      {
         path: "/privacy-policy",
         element: <PrivacyPolicy/>
+      },
+      {
+        path: "/shops",
+        element: <ShopsPage/>
+      },
+      {
+        path: "/shop/:shopId",
+        element: <ShopDetailPage/>
       }
       
       

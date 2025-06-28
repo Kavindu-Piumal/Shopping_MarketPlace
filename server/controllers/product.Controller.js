@@ -1,4 +1,6 @@
 import ProductModel from "../models/product.model.js";
+import ShopModel from "../models/shop.model.js";
+import { reactivateShop } from "../utils/shopDormancySystem.js";
 
 export const createProductController=async(req,res)=>{
     try{
@@ -33,9 +35,19 @@ export const createProductController=async(req,res)=>{
                     description,
                     more_details,
                     sellerId: req.userId // Set seller
-                });
+                });                const  saveProduct=await product.save();
 
-                const  saveProduct=await product.save();
+                // Reactivate shop if it's dormant/inactive when seller adds new product
+                try {
+                    const shop = await ShopModel.findOne({ owner: req.userId });
+                    if (shop && ['dormant', 'inactive'].includes(shop.status)) {
+                        await reactivateShop(shop._id);
+                        console.log(`🔄 Shop reactivated due to new product: ${shop.name}`);
+                    }
+                } catch (reactivateError) {
+                    console.error('Error reactivating shop:', reactivateError);
+                    // Don't fail product creation if reactivation fails
+                }
 
                 return res.status(201).json({
                     message: "Product created successfully",
@@ -112,10 +124,21 @@ export const getProductbyCategoryController=async(req,res)=>{
                 success:false
             })
         }
-        const product=await ProductModel.find({
+          // Build query to exclude seller's own products from general listings
+        const query = {
             category:{$in:id}
-
-        }).limit(10);
+        };
+        
+        // If user is logged in and is a seller, exclude their own products from general views
+        if (req.userId && req.user && req.user.role === 'seller') {
+            query.sellerId = { $ne: req.userId };
+            console.log(`🚫 Filtering out products for seller ${req.userId} in category ${id}`);
+        } else {
+            console.log(`👀 Public category view for category ${id} - no filtering applied`);
+        }
+        
+        console.log('Final query:', JSON.stringify(query));
+        const product=await ProductModel.find(query).limit(10);
 
         return res.status(200).json({
             message:"Product fetched successfully",
@@ -155,11 +178,14 @@ export const getProductbucategoryandsubcategoryController = async(req,res)=>{
             limit=10;
         }
 
-        const skip=(page-1)*limit;
-
-        const query={
+        const skip=(page-1)*limit;        const query={
             category:{$in:categoryId},
             subCategory:{$in:subCategoryId}
+        }
+        
+        // If user is logged in and is a seller, exclude their own products from general views
+        if (req.userId && req.user && req.user.role === 'seller') {
+            query.sellerId = { $ne: req.userId };
         }
 
         const[data,datacount]= await Promise.all([
@@ -330,9 +356,7 @@ export const searchProduct = async (req, res) => {
 
         if (!limit) {
             limit = 30;
-        }
-
-        const query = search
+        }        const query = search
              ? {
         $or: [
         { name: { $regex: search, $options: "i" } },
@@ -341,6 +365,15 @@ export const searchProduct = async (req, res) => {
         ]
          }
         : {};
+          // If user is logged in and is a seller, exclude their own products from general search results
+        if (req.userId && req.user && req.user.role === 'seller') {
+            query.sellerId = { $ne: req.userId };
+            console.log(`🚫 Filtering search results for seller ${req.userId}`);
+        } else {
+            console.log(`👀 Public search - no filtering applied`);
+        }
+        
+        console.log('Search query:', JSON.stringify(query));
         
         const skip = (page - 1) * limit;
 

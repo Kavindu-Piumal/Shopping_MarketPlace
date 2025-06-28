@@ -3,6 +3,7 @@ import MessageModel from "../models/message.model.js";
 import OrderModel from "../models/order.model.js";
 import ProductModel from "../models/product.model.js";
 import crypto from "crypto";
+import { createMessageNotification } from "./notification.controller.js";
 
 // Encryption key for chat messages (store in environment variable in production)
 const ENCRYPTION_KEY = process.env.CHAT_ENCRYPTION_KEY 
@@ -217,6 +218,14 @@ export const sendMessageController = async (req, res) => {
         // Emit message via socket for real-time delivery
         if (req.io) {
             req.io.to(`chat-${chatId}`).emit('new-message', decryptedMessage);
+        }
+
+        // Create message notification for the receiver
+        try {
+            await createMessageNotification(chatId, content, senderId, receiverId);
+            console.log(`Created message notification for user ${receiverId}`);
+        } catch (error) {
+            console.error('Error creating message notification:', error);
         }
 
         return res.status(201).json({

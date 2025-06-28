@@ -5,6 +5,7 @@ import ChatModel from "../models/chat.model.js";
 import ProductModel from "../models/product.model.js";
 import mongoose from "mongoose";
 import { handleNewOrderNotifications, notifyBuyerOrderConfirmed, notifyOrderStatusUpdate } from "../utils/orderNotifications.js";
+import { createOrderNotification } from "./notification.controller.js";
 
 export async function CashOnDeliveryController(req,res){
     try{        const userId = req.userId; // Assuming user ID is stored in req.user
@@ -132,6 +133,17 @@ export async function CashOnDeliveryController(req,res){
         const notificationResults = await handleNewOrderNotifications(generateOrder);
         console.log('Notification results:', notificationResults);
 
+        // Create in-app notifications for sellers
+        const notificationPromises = generateOrder.map(async (order) => {
+            try {
+                await createOrderNotification(order, 'order_placed', order.sellerId);
+                console.log(`Created notification for seller ${order.sellerId} for order ${order._id}`);
+            } catch (error) {
+                console.error('Error creating notification for order:', order._id, error);
+            }
+        });
+        await Promise.all(notificationPromises);
+
         return res.status(200).json({
             message: "Order placed successfully",
             data: {
@@ -202,6 +214,14 @@ export async function ConfirmOrderController(req, res) {
         order.order_status = "confirmed";
         order.buyer_notified = true;
         await order.save();
+
+        // Create in-app notification for buyer
+        try {
+            await createOrderNotification(order, 'order_confirmed', order.buyerId);
+            console.log(`Created order confirmation notification for buyer ${order.buyerId}`);
+        } catch (error) {
+            console.error('Error creating order confirmation notification:', error);
+        }
 
         // Send confirmation email to buyer
         const buyerNotified = await notifyBuyerOrderConfirmed(order);

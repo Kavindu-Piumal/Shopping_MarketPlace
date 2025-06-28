@@ -2,11 +2,9 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
-import fetchUserDetails from './utils/fetchUserDetails';
-import { setUserDetails } from './Store/UserSlice';
+import MobileBottomNav from './components/MobileBottomNav'
 import { setAllCategory , setAllSubCategory ,setLoadingCategory } from './Store/ProductSlice';
 import { useDispatch } from 'react-redux';
-import { use } from 'react';
 import Axios from './utils/Axios';
 import summaryApi from './common/summaryApi';
 import AxiosNotificationError, { setNotificationInstance } from './utils/AxiosNotificationError';
@@ -17,32 +15,35 @@ import { MdAddShoppingCart } from "react-icons/md";
 import CartMobileLink from './components/CartMobile';
 import { NotificationProvider, useNotification } from './context/NotificationContext';
 import NotificationContainer from './components/NotificationContainer';
-
-
-
-
-
-
+import { ModalProvider } from './context/ModalContext';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
 
 function App() {
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const { checkAuth } = useAuthContext();
 
-  const dispatch=useDispatch();
-  const location=useLocation();
+  // 🎯 ENTERPRISE: Initialize authentication state on app startup
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        await checkAuth(true); // Force check on app startup
+      } catch (error) {
+        console.error('Failed to initialize authentication:', error);
+      }
+    };
+
+    initializeAuth();
+  }, []); // Run once on mount
+
+  // 🎯 ENTERPRISE: Optimized data fetching (NO user auth calls here)
   
-
-  const fetchUser=async()=>{
-    //console.log("fetching user");
-    const userData=await fetchUserDetails();
-    //console.log('userdata',userData);
-    
-    // Only dispatch user details if the request was successful
-    if (userData && userData.success) {
-      dispatch(setUserDetails(userData.data));
-    } else {
-      // User is not logged in or request failed - set null user
-      dispatch(setUserDetails(null));
+  // 🚀 UX: Scroll to top on route changes (except for hash navigation)
+  useEffect(() => {
+    if (!location.hash) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }
+  }, [location.pathname]);
 
   const fetchCategories = async () => {
       try{
@@ -100,45 +101,41 @@ function App() {
   
     
 
-  useEffect(()=>{
-    fetchUser();
+  useEffect(() => {
+    // 🚀 PERFORMANCE: Only fetch non-auth data on app start
     fetchCategories();
     fetchSubCategory();
-    //fetchCartItem();
-  }
-  ,[])
-
-  
-    
+  }, [])
 
   return (
-  <GlobalProvider>
-    <SocketProvider>
-      <Header/>
-      <main className='min-h-[77vh]'>   
-        <Outlet/>
-      </main>   
-      <Footer/>
-      {
-        location.pathname !== '/checkout' && (
-
-          <CartMobileLink/>
-        )
-      }
-    </SocketProvider>
-  </GlobalProvider> 
-   
+    <GlobalProvider>
+      <SocketProvider>
+        <Header/>
+        <main className='min-h-[77vh]'>   
+          <Outlet/>
+        </main>   
+        <Footer/>
+        <MobileBottomNav/>
+        {
+          location.pathname !== '/checkout' && (
+            <CartMobileLink/>
+          )
+        }
+      </SocketProvider>
+    </GlobalProvider> 
   );
-    
-    
 }
 
 // Wrapper component with NotificationProvider
 function AppWithNotifications() {
   return (
     <NotificationProvider>
-      <App />
-      <NotificationSetup />
+      <ModalProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+        <NotificationSetup />
+      </ModalProvider>
     </NotificationProvider>
   );
 }

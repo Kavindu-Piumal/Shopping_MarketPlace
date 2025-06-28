@@ -5,16 +5,13 @@ import cartReducer from './cartProduct'
 import addressReducer from './Address.slice'
 import orderReducer from './OrderSlice'
 
-
 export const store = configureStore({
   reducer: {
     user: userReducer,
-    product : productReducer,
-    cartItem:cartReducer,
-    addresses :addressReducer,
-    orders:orderReducer
-
-    
+    product: productReducer,
+    cartItem: cartReducer,
+    addresses: addressReducer,
+    orders: orderReducer
   },
 })
 

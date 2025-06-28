@@ -11,33 +11,10 @@ const CartMobileLink = () => {
   const cartItem = useSelector((state) => state.cartItem.cart);
   // console.log("totalQty:", totalQty, "totalPrice:", totalPrice);
 
-  return (
-    <>
-      {cartItem[0] && (
-        <div className="sticky bottom-4 p-2">
-          <div className="bg-green-400 p-6 rounded flex items-center justify-between gap-3 lg:hidden">
-            <div className="flex items-center justify-between gap-4">
-              <div className="text-white p-2 bg-green-300 rounded w-fit">
-                <MdAddShoppingCart />
-              </div>
-              <div className="text-xs">
-                <p>{totalQty} items</p>
-                <p>{DisplayPriceInRupees(totalPrice)}</p>
-              </div>
-            </div>
-
-            <Link
-              to={"/cart"}
-              className="flex items-center justify-between mt-2 text-white"
-            >
-              <span>View Cart</span>
-              <FaCaretRight className="inline ml-2" />
-            </Link>
-          </div>
-        </div>
-      )}
-    </>
-  );
+  // No longer needed since we have cart buttons in:
+  // - Header for desktop
+  // - Mobile bottom navigation for mobile
+  return null;
 };
 
 export default CartMobileLink;

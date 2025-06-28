@@ -230,10 +230,114 @@ const summaryApi = {
     updateReview: {
         url: `${baseURL}/api/review/update`,
         method: "put"
-    },
-    deleteReview: {
+    },    deleteReview: {
         url: `${baseURL}/api/review/delete`,
         method: "delete"
+    },
+    // Shop Review APIs
+    addShopReview: {
+        url: `${baseURL}/api/shop-review/add`,
+        method: "post"
+    },
+    getShopReviews: {
+        url: `${baseURL}/api/shop-review/shop`,
+        method: "get"
+    },
+    canUserReviewShop: {
+        url: `${baseURL}/api/shop-review/can-review`,
+        method: "get"
+    },
+    updateShopReview: {
+        url: `${baseURL}/api/shop-review/update`,
+        method: "put"
+    },
+    deleteShopReview: {
+        url: `${baseURL}/api/shop-review/delete`,
+        method: "delete"
+    },
+    getShopReviewStats: {
+        url: `${baseURL}/api/shop-review/stats`,
+        method: "get"
+    },
+    // Shop APIs
+    createShop: {
+        url: `${baseURL}/api/shop/create`,
+        method: "post"
+    },
+    getAllShops: {
+        url: `${baseURL}/api/shop/all`,
+        method: "get"
+    },
+    getShopById: {
+        url: `${baseURL}/api/shop`,
+        method: "get"
+    },
+    getMyShop: {
+        url: `${baseURL}/api/shop/my/shop`,
+        method: "get"
+    },    updateShop: {
+        url: `${baseURL}/api/shop/update`,
+        method: "put"
+    },
+    updateShopStatus: {
+        url: `${baseURL}/api/shop/update-status`,
+        method: "put"
+    },    getShopCategories: {
+        url: `${baseURL}/api/shop/categories`,
+        method: "get"
+    },
+    // New shop management APIs
+    getShopLifecycleInfo: {
+        url: `${baseURL}/api/shop/my/lifecycle`,
+        method: "get"
+    },
+    uploadShopImage: {
+        url: `${baseURL}/api/shop/upload-image`,
+        method: "put"
+    },
+    deactivateShop: {
+        url: `${baseURL}/api/shop/deactivate`,
+        method: "put"
+    },
+    reactivateShop: {
+        url: `${baseURL}/api/shop/reactivate`,
+        method: "put"
+    },
+    deleteShop: {
+        url: `${baseURL}/api/shop/delete`,
+        method: "delete"
+    },// Test endpoints
+    testGetAllShops: {
+        url: `${baseURL}/api/test/test-shops`,
+        method: "get"
+    },
+    activateAllShops: {
+        url: `${baseURL}/api/test/activate-all-shops`,
+        method: "post"
+    },
+    
+    // Debug endpoints
+    debugShops: {
+        url: `${baseURL}/api/debug/shops`,
+        method: "get"
+    },
+    debugActivateAllShops: {
+        url: `${baseURL}/api/debug/activate-all-shops`,
+        method: "post"
+    },
+
+    // Notification endpoints
+    getUserNotifications: {
+        url: `${baseURL}/api/notifications`,
+        method: "get"
+    },
+    markNotificationAsRead: {
+        url: `${baseURL}/api/notifications/:id/read`,
+        method: "patch"
+    },
+    markAllNotificationsAsRead: {
+        url: `${baseURL}/api/notifications/mark-all-read`,
+        method: "patch"
     }
 }
 

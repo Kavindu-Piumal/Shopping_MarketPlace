@@ -41,6 +41,11 @@ const ProductDisplayPage = () => {
   const [eligibleOrders, setEligibleOrders] = useState([]);
   const [reviewStats, setReviewStats] = useState(null);
   const imageContaiener = useRef();
+
+  // Scroll to top when component mounts or productId changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [productId]);
   const fetchproductDetails = async () => {
     try {
       const response = await Axios({

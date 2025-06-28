@@ -17,7 +17,12 @@ import addressRouter from './routes/address.route.js';
 import OrderRouter from './routes/order.route.js';
 import chatRouter from './routes/chat.route.js';
 import reviewRouter from './routes/review.route.js';
-
+import shopReviewRouter from './routes/shopReview.route.js';
+import shopRouter from './routes/shop.route.js';
+import testRouter from './routes/test.route.js';
+import debugRouter from './routes/debug.route.js';
+import notificationRouter from './routes/notification.route.js';
+import { checkShopActivity } from './utils/shopDormancySystem.js';
 
 
 
@@ -68,6 +73,11 @@ app.use("/api/address",addressRouter);
 app.use('/api/order',OrderRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/review', reviewRouter);
+app.use('/api/shop-review', shopReviewRouter);
+app.use('/api/shop', shopRouter);
+app.use('/api/notifications', notificationRouter);
+app.use('/api/test', testRouter);
+app.use('/api/debug', debugRouter);
 
 // Socket.IO connection handling
 const connectedUsers = new Map();
@@ -122,8 +132,36 @@ io.on('connection', (socket) => {
     });
 });
 
+// Start automatic dormancy check (runs daily at startup + every 24 hours)
+const startDormancyScheduler = async () => {
+  console.log('🔄 Starting automatic shop dormancy scheduler...');
+  
+  // Run initial check after server starts
+  setTimeout(async () => {
+    try {
+      console.log('🔍 Running initial shop dormancy check...');
+      await checkShopActivity();
+    } catch (error) {
+      console.error('❌ Initial dormancy check failed:', error);
+    }
+  }, 5000); // Wait 5 seconds after server start
+  
+  // Schedule daily checks (every 24 hours)
+  setInterval(async () => {
+    try {
+      console.log('🔄 Running daily shop dormancy check...');
+      await checkShopActivity();
+    } catch (error) {
+      console.error('❌ Daily dormancy check failed:', error);
+    }
+  }, 24 * 60 * 60 * 1000); // 24 hours
+};
+
 connectDB().then(() => {
-    httpServer.listen(PORT, () => {
+  // Start dormancy scheduler
+  startDormancyScheduler();
+  
+  httpServer.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
 });
