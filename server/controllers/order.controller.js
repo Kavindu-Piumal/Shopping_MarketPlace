@@ -42,53 +42,69 @@ export async function CashOnDeliveryController(req,res){
             });
         }
         
-        console.log("✅ VALIDATION PASSED - No own products found");const payload = list_items
-            .filter(el => el?.productId) // Ensure productId exists
-            .map(el => {
-                // Handle both populated productId objects and ObjectId strings
-                let productId, productName, productImage;
-                
-                if (typeof el.productId === 'object' && el.productId._id) {
-                    // Populated productId object
-                    productId = el.productId._id;
-                    productName = el.productId.name;
-                    productImage = el.productId.image;
-                } else {
-                    // ProductId is just an ObjectId string - we'll need to fetch details later
-                    productId = el.productId;
-                    productName = el.productId.name || "Product Name";
-                    productImage = el.productId.image || [];
-                }
-                
-                return {
-                    userId: userId,
-                    orderId: `ORD-${new mongoose.Types.ObjectId()}`,
-                    productId: productId,
-                    product_details: {
-                        name: productName,
-                        image: productImage
-                    },
-                    paymentId: "COD", // Default value for Cash on Delivery
-                    payment_status: "Cash on Delivery",
-                    shippingAddress: addressId, // Use addressId for shippingAddress
-                    delivery_address: addressId,
-                    subTotalAmt: subTotalAmt,
-                    totalAmt: totalAmt,
-                    invoice_receipt: ""
-                };
-            });const generateOrder = await OrderModel.insertMany(payload);
-        
-        // Create chats for each order
+        console.log("✅ VALIDATION PASSED - No own products found");        const payload = await Promise.all(
+            list_items
+                .filter(el => el?.productId) // Ensure productId exists
+                .map(async (el) => {
+                    // Handle both populated productId objects and ObjectId strings
+                    let productId, productName, productImage, sellerId;
+                    
+                    if (typeof el.productId === 'object' && el.productId._id) {
+                        // Populated productId object
+                        productId = el.productId._id;
+                        productName = el.productId.name;
+                        productImage = el.productId.image;
+                        sellerId = el.productId.sellerId;
+                    } else {
+                        // ProductId is just an ObjectId string - we need to fetch product details
+                        productId = el.productId;
+                        const product = await ProductModel.findById(productId);
+                        if (product) {
+                            productName = product.name;
+                            productImage = product.image;
+                            sellerId = product.sellerId;
+                        } else {
+                            productName = "Product Name";
+                            productImage = [];
+                            sellerId = null;
+                        }
+                    }
+                    
+                    return {
+                        userId: userId,
+                        buyerId: userId, // Add buyerId for clarity
+                        sellerId: sellerId, // Add sellerId to order
+                        orderId: `ORD-${new mongoose.Types.ObjectId()}`,
+                        productId: productId,
+                        product_details: {
+                            name: productName,
+                            image: productImage
+                        },
+                        paymentId: "COD", // Default value for Cash on Delivery
+                        payment_status: "Cash on Delivery",
+                        shippingAddress: addressId, // Use addressId for shippingAddress
+                        delivery_address: addressId,
+                        subTotalAmt: subTotalAmt,
+                        totalAmt: totalAmt,
+                        invoice_receipt: ""
+                    };
+                })
+        );        const generateOrder = await OrderModel.insertMany(payload);
+        console.log('✅ Orders created:', generateOrder.length);
+        console.log('📝 Sample order data:', {
+            orderId: generateOrder[0]?._id,
+            totalAmt: generateOrder[0]?.totalAmt,
+            sellerId: generateOrder[0]?.sellerId,
+            buyerId: generateOrder[0]?.buyerId
+        });
         const chatPromises = generateOrder.map(async (order) => {
             try {
-                // Get product to find seller
-                const product = await ProductModel.findById(order.productId);
-                if (product && product.sellerId) {
+                if (order.sellerId) {
                     // Check if chat already exists
                     const existingChat = await ChatModel.findOne({
                         orderId: order._id,
                         buyerId: userId,
-                        sellerId: product.sellerId
+                        sellerId: order.sellerId
                     });
 
                     if (!existingChat) {
@@ -96,11 +112,16 @@ export async function CashOnDeliveryController(req,res){
                         const newChat = new ChatModel({
                             orderId: order._id,
                             buyerId: userId,
-                            sellerId: product.sellerId,
+                            sellerId: order.sellerId,
                             productId: order.productId
                         });
                         await newChat.save();
+                        console.log(`✅ Created chat for order ${order._id}`);
+                    } else {
+                        console.log(`📝 Chat already exists for order ${order._id}`);
                     }
+                } else {
+                    console.log(`❌ No sellerId found for order ${order._id}`);
                 }
             } catch (error) {
                 console.error('Error creating chat for order:', order._id, error);
@@ -136,7 +157,7 @@ export async function CashOnDeliveryController(req,res){
         // Create in-app notifications for sellers
         const notificationPromises = generateOrder.map(async (order) => {
             try {
-                await createOrderNotification(order, 'order_placed', order.sellerId);
+                await createOrderNotification(order, 'order_placed', order.sellerId, req.io);
                 console.log(`Created notification for seller ${order.sellerId} for order ${order._id}`);
             } catch (error) {
                 console.error('Error creating notification for order:', order._id, error);
@@ -200,9 +221,8 @@ export async function ConfirmOrderController(req, res) {
             });
         }
 
-        // Verify that the seller owns the product in this order
-        const product = await ProductModel.findById(order.productId);
-        if (!product || product.sellerId.toString() !== sellerId) {
+        // Verify that the seller is authorized to confirm this order
+        if (order.sellerId.toString() !== sellerId) {
             return res.status(403).json({
                 message: "You are not authorized to confirm this order",
                 error: true,
@@ -217,7 +237,7 @@ export async function ConfirmOrderController(req, res) {
 
         // Create in-app notification for buyer
         try {
-            await createOrderNotification(order, 'order_confirmed', order.buyerId);
+            await createOrderNotification(order, 'order_confirmed', order.buyerId, req.io);
             console.log(`Created order confirmation notification for buyer ${order.buyerId}`);
         } catch (error) {
             console.error('Error creating order confirmation notification:', error);

@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const notificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true
   },
   type: {
@@ -20,11 +20,11 @@ const notificationSchema = new mongoose.Schema({
     required: true
   },
   data: {
-    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
-    chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat' },
-    senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-    shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop' }
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'order' },
+    chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'chat' },
+    senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'product' },
+    shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'shop' }
   },
   read: {
     type: Boolean,
@@ -44,5 +44,5 @@ const notificationSchema = new mongoose.Schema({
 // Index for efficient querying
 notificationSchema.index({ userId: 1, read: 1, createdAt: -1 });
 
-const Notification = mongoose.model('Notification', notificationSchema);
+const Notification = mongoose.model('notification', notificationSchema);
 export default Notification;

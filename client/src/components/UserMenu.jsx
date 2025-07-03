@@ -12,14 +12,16 @@ import { useNavigate } from "react-router-dom";
 import { FaLink } from "react-icons/fa6";
 import isAdmin from "../utils/isAdmin";
 import { useModal } from "../context/ModalContext";
+import { useAuthContext } from "../context/AuthContext"; // Add AuthContext
 
-const UserMenu = ({ close }) => {
+const UserMenu = ({ close, hideTitle = false }) => {
   const user = useSelector((state) => state.user);
   const disPatch = useDispatch();
   const navigate = useNavigate();
   const { showSuccess } = useNotification();
   const axiosNotificationError = useAxiosNotificationError();
   const { openCreateShopModal } = useModal();
+  const { logout: authLogout } = useAuthContext(); // Use AuthContext logout
   
   const handleLogout = async () => {
     try {
@@ -34,10 +36,13 @@ const UserMenu = ({ close }) => {
           close();
         }
 
+        // Use AuthContext logout for proper state management
+        authLogout();
         disPatch(logout());
-        localStorage.clear();
         showSuccess(response.data.message);
-        navigate("/");
+        
+        // Force page reload to ensure complete state reset
+        window.location.href = "/";
       }
     } catch (error) {
       axiosNotificationError(error);
@@ -46,8 +51,8 @@ const UserMenu = ({ close }) => {
 
   return (
     <div>
-      <div className="font-semibold">My Account</div>
-      <div className="  text-sm flex items-center gap-2">
+      {!hideTitle && <div className="font-semibold">My Account</div>}
+      <div className={`text-sm flex items-center gap-2 ${hideTitle ? 'mt-1' : ''}`}>
         <span className="max-w-52 text-ellipsis line-clamp-1">
           {user.name || user.mobile}{" "}
           <span className="text-medium text-red-500">

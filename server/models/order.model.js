@@ -6,6 +6,16 @@ const orderSchema = new mongoose.Schema({
         ref: "user",
         required: true,
     },
+    buyerId: {
+        type: mongoose.Schema.ObjectId,
+        ref: "user",
+        required: true,
+    },
+    sellerId: {
+        type: mongoose.Schema.ObjectId,
+        ref: "user",
+        required: true,
+    },
     orderId: {  
         type: String,
         unique: true,

@@ -27,8 +27,9 @@ export const SocketProvider = ({ children }) => {
 
             // Connection handlers
             newSocket.on('connect', () => {
-                console.log('Connected to server');
+                console.log('🔌 Connected to server with socket ID:', newSocket.id);
                 setIsConnected(true);
+                console.log('🔌 Joining user room for notifications:', user._id);
                 newSocket.emit('join', user._id);
             });
 

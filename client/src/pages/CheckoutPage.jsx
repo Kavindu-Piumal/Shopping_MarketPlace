@@ -45,7 +45,12 @@ const CheckoutPage = () => {
       });
       
       const { data: responseData } = response;
-      if (responseData.success) {        // Clear cart in Redux and localStorage
+      console.log("Order response:", responseData);
+      
+      if (responseData.success) {
+        console.log("Order placed successfully, clearing cart and redirecting...");
+        
+        // Clear cart in Redux and localStorage
         dispatch(handleAdditemCart([]));
         if (window.localStorage) {
           localStorage.removeItem("persist:cartItem"); // If using redux-persist
@@ -53,8 +58,11 @@ const CheckoutPage = () => {
         if (window.dispatchEvent) {
           window.dispatchEvent(new Event("storage")); // Trigger redux-persist update
         }
-          // Simply redirect to success page after order placement        navigate("/ordersuccesscontactshop", { state: { text: "Order Placed" } });
+          // Simply redirect to success page after order placement
+        console.log("Navigating to OrderSuccessContactShop...");
+        navigate("/OrderSuccessContactShop", { state: { text: "Order Placed" } });
       } else {
+        console.log("Order failed:", responseData.message);
         showError(responseData.message || "Order failed");
       }
     } catch (error) {

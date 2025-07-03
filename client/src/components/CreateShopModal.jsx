@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IoClose } from 'react-icons/io5';
-import { FaStore, FaPhone, FaEnvelope, FaMapMarkerAlt, FaTags, FaClock } from 'react-icons/fa';
+import { FaStore, FaPhone, FaEnvelope, FaMapMarkerAlt, FaTags, FaClock, FaImage, FaUpload, FaTrash } from 'react-icons/fa';
 import { useNotification } from '../context/NotificationContext';
 import { useAxiosNotificationError } from '../utils/AxiosNotificationError';
 import Axios from '../utils/Axios';
@@ -54,6 +54,8 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
         keywords: keywordsString,
         mobile: shopData.mobile || '',
         email: shopData.email || '',
+        logo: shopData.logo || '',
+        banner: shopData.banner || '',
         address: {
           street: shopData.address?.street || '',
           city: shopData.address?.city || '',
@@ -86,6 +88,8 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
         keywords: '',
         mobile: '',
         email: '',
+        logo: '',
+        banner: '',
         address: {
           street: '',
           city: '',
@@ -111,6 +115,12 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
       };
     }
   });
+
+  // Image upload states
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const logoFileRef = useRef(null);
+  const bannerFileRef = useRef(null);
 
   // Fetch shop categories on component mount
   useEffect(() => {
@@ -163,6 +173,111 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
         }
       }
     }));
+  };
+
+  // Image upload handlers
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      showSuccess('Please select a valid image file (JPG, PNG, WEBP)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showSuccess('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingLogo(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await Axios({
+        url: summaryApi.uploadImage.url,
+        method: summaryApi.uploadImage.method,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        setFormData(prev => ({
+          ...prev,
+          logo: response.data.data.url
+        }));
+        showSuccess('Logo uploaded successfully');
+      }
+    } catch (error) {
+      axiosNotificationError(error);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleBannerUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      showSuccess('Please select a valid image file (JPG, PNG, WEBP)');
+      return;
+    }
+
+    // Validate file size (max 10MB for banner)
+    if (file.size > 10 * 1024 * 1024) {
+      showSuccess('Banner image size should be less than 10MB');
+      return;
+    }
+
+    try {
+      setUploadingBanner(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await Axios({
+        url: summaryApi.uploadImage.url,
+        method: summaryApi.uploadImage.method,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        setFormData(prev => ({
+          ...prev,
+          banner: response.data.data.url
+        }));
+        showSuccess('Banner uploaded successfully');
+      }
+    } catch (error) {
+      axiosNotificationError(error);
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
+  const removeLogo = () => {
+    setFormData(prev => ({ ...prev, logo: '' }));
+    if (logoFileRef.current) {
+      logoFileRef.current.value = '';
+    }
+  };
+
+  const removeBanner = () => {
+    setFormData(prev => ({ ...prev, banner: '' }));
+    if (bannerFileRef.current) {
+      bannerFileRef.current.value = '';
+    }
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -300,6 +415,134 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                 placeholder="e.g., electronics, mobile, laptop, accessories"
               />
               <p className="text-xs text-gray-500 mt-1">Help customers find your shop with relevant keywords</p>
+            </div>
+          </div>
+
+          {/* Shop Images */}
+          <div className="bg-indigo-50 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
+              <FaImage className="text-indigo-600" />
+              Shop Images
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Logo Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Shop Logo
+                </label>
+                <div className="space-y-3">
+                  {formData.logo ? (
+                    <div className="relative">
+                      <img 
+                        src={formData.logo} 
+                        alt="Shop Logo Preview" 
+                        className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeLogo}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                      <FaStore className="text-2xl text-gray-400" />
+                    </div>
+                  )}
+                  
+                  <div>
+                    <input
+                      ref={logoFileRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <label
+                      htmlFor="logo-upload"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 cursor-pointer transition-colors disabled:opacity-50"
+                    >
+                      {uploadingLogo ? (
+                        <>
+                          <Loading />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <FaUpload />
+                          {formData.logo ? 'Change Logo' : 'Upload Logo'}
+                        </>
+                      )}
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Recommended: Square image, max 5MB (JPG, PNG, WEBP)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Banner Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Shop Banner
+                </label>
+                <div className="space-y-3">
+                  {formData.banner ? (
+                    <div className="relative">
+                      <img 
+                        src={formData.banner} 
+                        alt="Shop Banner Preview" 
+                        className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeBanner}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                      <FaImage className="text-2xl text-gray-400" />
+                    </div>
+                  )}
+                  
+                  <div>
+                    <input
+                      ref={bannerFileRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerUpload}
+                      className="hidden"
+                      id="banner-upload"
+                    />
+                    <label
+                      htmlFor="banner-upload"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 cursor-pointer transition-colors disabled:opacity-50"
+                    >
+                      {uploadingBanner ? (
+                        <>
+                          <Loading />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <FaUpload />
+                          {formData.banner ? 'Change Banner' : 'Upload Banner'}
+                        </>
+                      )}
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Recommended: Wide image (16:9 ratio), max 10MB (JPG, PNG, WEBP)
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -516,12 +759,14 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploadingLogo || uploadingBanner}
               className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 flex items-center gap-2 font-medium shadow-md"
             >              {loading ? <Loading /> : <FaStore />}
               {loading 
                 ? (isEditing ? 'Updating Shop...' : 'Creating Shop...') 
-                : (isEditing ? 'Update Shop' : 'Create Shop')
+                : uploadingLogo || uploadingBanner 
+                  ? 'Uploading Images...'
+                  : (isEditing ? 'Update Shop' : 'Create Shop')
               }
             </button>
           </div>

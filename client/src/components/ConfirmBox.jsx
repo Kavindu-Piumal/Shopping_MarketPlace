@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 
 const ConfirmBox = ({
@@ -12,9 +12,44 @@ const ConfirmBox = ({
   confirmButtonClass = "px-4 py-1 border rounded border-green-600 text-green-600 hover:bg-green-600 hover:text-white",
   cancelButtonClass = "px-4 py-1 border rounded border-red-500 text-red-500 hover:bg-red-500 hover:text-white",
 }) => {
+  // Handle escape key and prevent body scroll
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === 'Escape') {
+        close();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [close]);
+
+  // Handle backdrop click to close modal
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      close();
+    }
+  };
+
+  // Prevent event propagation when clicking inside the confirmation box
+  const handleContentClick = (e) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div className="fixed top-0 bottom-0 right-0 left-0 z-50 bg-neutral-800 bg-opacity-90 p-4 flex justify-center items-center backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md p-5 rounded-lg shadow-xl border border-gray-200">
+    <div 
+      className="fixed top-0 bottom-0 right-0 left-0 z-50 bg-neutral-800 bg opacity-90 p-4 flex justify-center items-center backdrop-blur-sm"
+      onClick={handleBackdropClick}
+    >
+      <div 
+        className="bg-white w-full max-w-md p-5 rounded-lg shadow-xl border border-gray-200"
+        onClick={handleContentClick}
+      >
         {" "}
         <div className="flex justify-between items-center gap-3 border-b pb-2">
           <h1 className="font-semibold text-lg">{title}</h1>

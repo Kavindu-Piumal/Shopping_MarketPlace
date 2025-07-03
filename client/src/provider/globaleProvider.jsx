@@ -7,6 +7,7 @@ import { useNotification } from "../context/NotificationContext";
 import { PriceWithDiscount } from "../utils/PricewithDiscount";
 import { handleAddAddress } from "../Store/Address.slice";
 import { setOrders } from "../Store/OrderSlice";
+import { useAuthContext } from "../context/AuthContext"; // Add auth context
 
 export const Globalcontext = createContext(null);
 
@@ -15,6 +16,7 @@ export const useGlobalcontext = () => useContext(Globalcontext);
 const GlobalProvider = ({ children }) => {
   const dispatch = useDispatch();
   const { showSuccess, axiosNotificationError } = useNotification();
+  const { logout: authLogout } = useAuthContext(); // Get auth logout function
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalQty, setTotalQty] = useState(0);  const cartItem = useSelector(state => state.cartItem.cart);
   const [notdiscountTotalPrice, setNotdiscountTotalPrice] = useState(0);
@@ -108,7 +110,8 @@ const GlobalProvider = ({ children }) => {
   
 
   const handlelogout = () => {
-    localStorage.clear();
+    // Use AuthContext logout for proper state management
+    authLogout();
     dispatch(handleAdditemCart([]));
     setTotalPrice(0);
     setTotalQty(0);

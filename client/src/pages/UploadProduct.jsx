@@ -13,10 +13,12 @@ import summaryApi from "../common/summaryApi";
 import Axios from "../utils/Axios";
 import { setAllSubCategory } from '../Store/ProductSlice';
 import { setAllCategory } from '../Store/ProductSlice';
+import DashboardMobileLayout from "../components/DashboardMobileLayout";
 
 const UploadProduct = () => {
   const dispatch = useDispatch();
   const { axiosNotificationError } = useNotification();
+  const fileInputRef = React.useRef(null); // Add ref for file input
   const [data, setData] = useState({
     name: "",
     image: [],
@@ -52,24 +54,45 @@ const UploadProduct = () => {
   const handleUploadImage = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    setImageLoading(true);
+    
+    try {
+      setImageLoading(true);
 
-    const uploadedImages = [];
-    for (const file of files) {
-      const response = await UploadImages(file);
-      const imageUrl =
-        response?.data?.image?.url ||
-        response?.data?.image ||
-        response?.data?.url ||
-        "";
-      if (imageUrl) uploadedImages.push(imageUrl);
+      const uploadedImages = [];
+      for (const file of files) {
+        try {
+          const response = await UploadImages(file);
+          const imageUrl =
+            response?.data?.image?.url ||
+            response?.data?.image ||
+            response?.data?.url ||
+            "";
+          if (imageUrl) {
+            uploadedImages.push(imageUrl);
+          }
+        } catch (error) {
+          console.error('Error uploading individual file:', error);
+          axiosNotificationError(error);
+          // Continue with other files even if one fails
+        }
+      }
+
+      if (uploadedImages.length > 0) {
+        setData((prev) => ({
+          ...prev,
+          image: [...prev.image, ...uploadedImages],
+        }));
+      }
+    } catch (error) {
+      console.error('Error in handleUploadImage:', error);
+      axiosNotificationError(error);
+    } finally {
+      setImageLoading(false);
+      // Clear the file input after processing
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
-
-    setData((prev) => ({
-      ...prev,
-      image: [...prev.image, ...uploadedImages],
-    }));
-    setImageLoading(false);
   };
 
   const handleDeleteImage = (index) => {
@@ -135,7 +158,20 @@ const UploadProduct = () => {
             discount : "",
             description : "",
             more_details : {},
-          })
+          });
+        
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        
+        // Reset other form states
+        setSelectedCategory("");
+        setSelectedSubCategory("");
+        setImageLoading(false);
+        setViewImageURL("");
+        setOpenAddField(false);
+        setFieldName("");
       }
         
           }catch(error){
@@ -182,13 +218,14 @@ const UploadProduct = () => {
   }, []);
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-lime-100 flex flex-col items-center py-8">
-      <div className="p-4 font-bold bg-white/90 shadow-lg rounded-t-xl flex items-center justify-between w-full max-w-2xl border-b border-emerald-100">
-        <h2 className="text-2xl text-emerald-700 tracking-wide flex items-center gap-2">
-          <span className="inline-block text-3xl">🌱</span> Upload Eco Product
-        </h2>
-      </div>
-      <div className="max-w-2xl w-full p-6 bg-white/95 rounded-b-xl shadow-xl border border-emerald-100">
+    <DashboardMobileLayout>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-lime-100 flex flex-col items-center py-8">
+        <div className="p-4 font-bold bg-white/90 shadow-lg rounded-t-xl flex items-center justify-between w-full max-w-2xl border-b border-emerald-100">
+          <h2 className="text-2xl text-emerald-700 tracking-wide flex items-center gap-2">
+            <span className="inline-block text-3xl">🌱</span> Upload Eco Product
+          </h2>
+        </div>
+        <div className="max-w-2xl w-full p-6 bg-white/95 rounded-b-xl shadow-xl border border-emerald-100">
         <form className="grid gap-5" onSubmit={handleSubmit}>
           {/* Name */}
           <div className="grid gap-1">
@@ -243,6 +280,7 @@ const UploadProduct = () => {
                   )}
                 </div>
                 <input
+                  ref={fileInputRef}
                   type="file"
                   id="productImage"
                   className="hidden"
@@ -480,7 +518,9 @@ const UploadProduct = () => {
             className="bg-gradient-to-r from-emerald-500 to-lime-400 hover:from-lime-400 hover:to-emerald-500 text-white py-3 px-6 rounded-lg font-bold shadow-lg mt-2 tracking-wide text-lg transition-all duration-200"
           >Submit</button>
         </form>
-      </div>
+        </div>
+      </div> {/* End scrollable content area */}
+      
       {ViewImageURL && (
         <ViewImage url={ViewImageURL} close={() => setViewImageURL("")} />
       )}
@@ -492,7 +532,7 @@ const UploadProduct = () => {
           close={() => setOpenAddField(false)}
         />
       )}
-    </section>
+    </DashboardMobileLayout>
   );
 };
 

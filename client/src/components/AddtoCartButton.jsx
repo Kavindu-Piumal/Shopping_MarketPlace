@@ -13,6 +13,9 @@ import { useNavigate } from "react-router-dom";
 const AddtoCartButton = ({ data }) => {
   const { fetchCartItem, UpdateCartItem, deleteCartItem } = useGlobalcontext();
   const [loading, setLoading] = useState(false);
+  const [increaseLoading, setIncreaseLoading] = useState(false);
+  const [decreaseLoading, setDecreaseLoading] = useState(false);
+  const [lastActionTime, setLastActionTime] = useState(0);
   const cartItem = useSelector((state) => state.cartItem.cart);
   const user = useSelector((state) => state.user);
   const [isAvailableCart, setIsAvailableCart] = useState(false);
@@ -59,6 +62,10 @@ const AddtoCartButton = ({ data }) => {
 
     try {
       setLoading(true);
+      
+      // Remove any existing cart operation notifications first
+      removeNotificationsByCategory('cart-operation');
+      
       const response = await Axios({
         url: summaryApi.addToCart.url,
         method: summaryApi.addToCart.method,
@@ -70,7 +77,10 @@ const AddtoCartButton = ({ data }) => {
 
       const { data: responseData } = response;
       if (responseData.success) {
-        showSuccess(responseData.message);
+        showSuccess(responseData.message, {
+          category: 'cart-operation',
+          duration: 2000
+        });
         if (fetchCartItem) {
           fetchCartItem();
         }
@@ -106,16 +116,44 @@ const AddtoCartButton = ({ data }) => {
     e.preventDefault();
     e.stopPropagation();
     
+    // Prevent multiple clicks while loading or within 500ms
+    const now = Date.now();
+    if (increaseLoading || (now - lastActionTime < 500)) return;
+    setLastActionTime(now);
+    
     // Check if user is logged in
     if (!user?._id) {
       showLoginNotification();
       return;
     }
     
-    const response = await UpdateCartItem(cartItemDetails?._id, qty + 1);
+    try {
+      setIncreaseLoading(true);
+      
+      // Remove any existing cart operation notifications first
+      removeNotificationsByCategory('cart-operation');
+      
+      const response = await UpdateCartItem(cartItemDetails?._id, qty + 1);
+      if(response.success){
+        showSuccess("Item quantity updated", {
+          category: 'cart-operation',
+          duration: 2000
+        });
+      }
+    } catch (error) {
+      console.error("Error increasing quantity:", error);
+      axiosNotificationError(error);
+    } finally {
+      setIncreaseLoading(false);
+    }
   };  const decreaseqty = async(e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Prevent multiple clicks while loading or within 500ms
+    const now = Date.now();
+    if (decreaseLoading || (now - lastActionTime < 500)) return;
+    setLastActionTime(now);
 
     // Check if user is logged in
     if (!user?._id) {
@@ -123,43 +161,69 @@ const AddtoCartButton = ({ data }) => {
       return;
     }
 
-    // Always call UpdateCartItem, let backend handle qty=0 as delete
-        const response = await UpdateCartItem(cartItemDetails?._id, qty === 1 ? 0 : qty - 1);
-    if(response.success){
-      showSuccess("Item Removed from cart");
+    try {
+      setDecreaseLoading(true);
+      
+      // Remove any existing cart operation notifications first
+      removeNotificationsByCategory('cart-operation');
+
+      // Always call UpdateCartItem, let backend handle qty=0 as delete
+      const response = await UpdateCartItem(cartItemDetails?._id, qty === 1 ? 0 : qty - 1);
+      if(response.success){
+        showSuccess("Item Removed from cart", {
+          category: 'cart-operation', // Add category for replacement
+          duration: 2000 // Shorter duration for cart operations
+        });
+      }
+    } catch (error) {
+      console.error("Error decreasing quantity:", error);
+      axiosNotificationError(error);
+    } finally {
+      setDecreaseLoading(false);
     }
   };
   return (
-    <div className="w-full max-w-[150px]">
+    <div className="w-full max-w-[180px] lg:max-w-[150px]">
       {/* Check if user is the seller of this product */}
       {data?.sellerId === user?._id ? (
         <button
           disabled
-          className="bg-gray-400 text-white px-2 py-1 rounded cursor-not-allowed opacity-60"
+          className="bg-gray-400 text-white px-3 py-2 rounded-lg cursor-not-allowed opacity-60 text-sm w-full h-8 flex items-center justify-center"
           title="You cannot purchase your own product"
         >
           Your Product
         </button>
       ) : isAvailableCart ? (
-        <div className="flex">
+        <div className="flex items-center justify-center rounded-lg h-8 w-24 sm:w-auto add-to-cart-container">
           <button
             onClick={decreaseqty}
-            className="bg-green-400 rounded flex items-center justify-center hover:bg-green-600 p-1 text-white w-full flex-1"
+            disabled={decreaseLoading || increaseLoading}
+            className={`text-white w-8 h-8 flex items-center justify-center transition-all duration-200 border-none outline-none flex-shrink-0 rounded-l-md ${
+              decreaseLoading || increaseLoading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-green-500 hover:bg-green-600 active:bg-green-700'
+            }`}
           >
-            <HiOutlineMinus />
+            <HiOutlineMinus size={14} />
           </button>
-          <p className="w-full flex-1 p-1 flex items-center justify-center">{qty} </p>
+          <div className="bg-white text-center w-8 text-xs font-semibold text-gray-700 border-none h-8 flex items-center justify-center flex-shrink-0">{qty}
+          </div>
           <button
             onClick={increaseqty}
-            className="bg-green-400 rounded flex items-center justify-center p-1 hover:bg-green-600 text-white w-full flex-1"
+            disabled={increaseLoading || decreaseLoading}
+            className={`text-white w-8 h-8 flex items-center justify-center transition-all duration-200 border-none outline-none flex-shrink-0 rounded-r-md ${
+              increaseLoading || decreaseLoading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-green-500 hover:bg-green-600 active:bg-green-700'
+            }`}
           >
-            <PiPlusBold />
+            <PiPlusBold size={14} />
           </button>
         </div>
       ) : (
         <button
           onClick={handleADDToCart}
-          className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 "
+          className="w-full bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 active:bg-green-700 transition-all duration-200 text-xs font-medium h-8 flex items-center justify-center"
         >
           {loading ? <Loading /> : "Add to Cart"}
         </button>

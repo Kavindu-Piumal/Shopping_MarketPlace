@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaStore, FaEdit, FaEye, FaBox, FaStar, FaPlus, FaUsers, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaImage, FaPause, FaPlay, FaTrash, FaExclamationTriangle, FaUpload } from 'react-icons/fa';
+import { FaStore, FaEdit, FaEye, FaBox, FaStar, FaPlus, FaUsers, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaPause, FaPlay, FaTrash, FaExclamationTriangle, FaUpload } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import Axios from '../utils/Axios';
 import summaryApi from '../common/summaryApi';
@@ -8,18 +8,17 @@ import { useAxiosNotificationError } from '../utils/AxiosNotificationError';
 import { useSelector } from 'react-redux';
 import Loading from '../components/Loading';
 import CreateShopModal from '../components/CreateShopModal';
+import DashboardMobileLayout from '../components/DashboardMobileLayout';
 
 const MyShop = () => {
   const navigate = useNavigate();
   const user = useSelector(state => state.user);
   const { showSuccess, showError } = useNotification();
   const axiosNotificationError = useAxiosNotificationError();
-    const [shop, setShop] = useState(null);
+  const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [lifecycleInfo, setLifecycleInfo] = useState(null);
-  const [logoUploading, setLogoUploading] = useState(false);
-  const [bannerUploading, setBannerUploading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
 
@@ -66,67 +65,6 @@ const MyShop = () => {
     } catch (error) {
       // Silently handle error - lifecycle info is optional
       console.log('Could not fetch lifecycle info:', error);
-    }
-  };  const handleImageUpload = async (imageType, file) => {
-    try {
-      console.log(`Starting ${imageType} upload:`, file.name);
-      
-      // Set loading state based on image type
-      if (imageType === 'logo') {
-        setLogoUploading(true);
-      } else {
-        setBannerUploading(true);
-      }
-      
-      // First upload the image file
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      const uploadResponse = await Axios({
-        url: summaryApi.uploadImage.url,
-        method: summaryApi.uploadImage.method,
-        data: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      console.log(`${imageType} upload response:`, uploadResponse.data);
-
-      if (uploadResponse.data.success) {
-        // Then update shop with the image URL
-        const updateResponse = await Axios({
-          url: summaryApi.uploadShopImage.url,
-          method: summaryApi.uploadShopImage.method,
-          data: {
-            imageType,
-            imageUrl: uploadResponse.data.data.url
-          }
-        });
-
-        console.log(`${imageType} shop update response:`, updateResponse.data);
-
-        if (updateResponse.data.success) {
-          // Immediately update the shop state to show the new image
-          setShop(updateResponse.data.data);
-          showSuccess(`Shop ${imageType} updated successfully`);
-          
-          console.log(`Updated shop with new ${imageType}:`, updateResponse.data.data[imageType]);
-          
-          // Optionally refresh shop data to ensure sync
-          await fetchMyShop();
-        }
-      }
-    } catch (error) {
-      console.error(`Error uploading ${imageType}:`, error);
-      axiosNotificationError(error);
-    } finally {
-      // Clear loading state based on image type
-      if (imageType === 'logo') {
-        setLogoUploading(false);
-      } else {
-        setBannerUploading(false);
-      }
     }
   };
 
@@ -267,28 +205,32 @@ const MyShop = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <DashboardMobileLayout>
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 flex items-center gap-3">
             <FaStore className="text-emerald-600" />
             My Shop Dashboard
           </h1>
-          <div className="flex items-center gap-4">
+          {/* View Shop and Edit Shop in one line on mobile */}
+          <div className="flex flex-row items-center gap-2 sm:gap-4">
             <Link
               to={`/shop/${shop._id}`}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-2"
+              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
             >
               <FaEye />
-              View Shop
+              <span className="hidden xs:inline">View Shop</span>
+              <span className="xs:hidden">View</span>
             </Link>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-all flex items-center gap-2"
+              className="bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
             >
               <FaEdit />
-              Edit Shop
+              <span className="hidden xs:inline">Edit Shop</span>
+              <span className="xs:hidden">Edit</span>
             </button>
           </div>
         </div>
@@ -340,119 +282,49 @@ const MyShop = () => {
             <FaStore className="text-emerald-600" />
             Shop Management
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">            {/* Image Upload Controls */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Shop Logo</label>
-              <div className="space-y-2">
-                {shop.logo ? (
-                  <div className="relative">
-                    <img src={shop.logo} alt="Shop Logo" className="w-full h-24 object-cover rounded-lg border-2 border-gray-200" />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
-                      <span className="text-white text-sm opacity-0 hover:opacity-100 transition-opacity">Click to change</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-emerald-400 transition-colors">
-                    <div className="text-center">
-                      <FaImage className="text-gray-400 text-xl mx-auto mb-1" />
-                      <span className="text-xs text-gray-500">No logo</span>
-                    </div>
-                  </div>
-                )}
-                <label htmlFor="logoUpload" className="block">
-                  <div className={`w-full py-2 px-3 rounded-lg text-center text-sm font-medium cursor-pointer transition-all ${
-                    logoUploading 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                  }`}>
-                    {logoUploading ? 'Uploading...' : shop.logo ? 'Change Logo' : 'Upload Logo'}
-                  </div>
-                  <input
-                    id="logoUpload"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files[0] && handleImageUpload('logo', e.target.files[0])}
-                    className="hidden"
-                    disabled={logoUploading}
-                  />
-                </label>
+          
+          {/* Mobile-optimized layout */}
+          <div className="space-y-4">
+            {/* Status and Action in one line on mobile */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Shop Status</label>
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(shop.status)}
+                  {shop.status === 'active' ? (
+                    <button
+                      onClick={handleDeactivateShop}
+                      className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-all flex items-center gap-1"
+                    >
+                      <FaPause className="text-xs" />
+                      <span className="hidden xs:inline">Deactivate</span>
+                      <span className="xs:hidden">Pause</span>
+                    </button>
+                  ) : shop.status === 'inactive' ? (
+                    <button
+                      onClick={handleReactivateShop}
+                      className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-all flex items-center gap-1"
+                    >
+                      <FaPlay className="text-xs" />
+                      <span className="hidden xs:inline">Reactivate</span>
+                      <span className="xs:hidden">Resume</span>
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Shop Banner</label>
-              <div className="space-y-2">
-                {shop.banner ? (
-                  <div className="relative">
-                    <img src={shop.banner} alt="Shop Banner" className="w-full h-24 object-cover rounded-lg border-2 border-gray-200" />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
-                      <span className="text-white text-sm opacity-0 hover:opacity-100 transition-opacity">Click to change</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-emerald-400 transition-colors">
-                    <div className="text-center">
-                      <FaImage className="text-gray-400 text-xl mx-auto mb-1" />
-                      <span className="text-xs text-gray-500">No banner</span>
-                    </div>
-                  </div>
-                )}
-                <label htmlFor="bannerUpload" className="block">
-                  <div className={`w-full py-2 px-3 rounded-lg text-center text-sm font-medium cursor-pointer transition-all ${
-                    bannerUploading 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                  }`}>
-                    {bannerUploading ? 'Uploading...' : shop.banner ? 'Change Banner' : 'Upload Banner'}
-                  </div>
-                  <input
-                    id="bannerUpload"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files[0] && handleImageUpload('banner', e.target.files[0])}
-                    className="hidden"
-                    disabled={bannerUploading}
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* Shop Status Controls */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Shop Status</label>
-              <div className="flex flex-col gap-2">
-                {getStatusBadge(shop.status)}
-                {shop.status === 'active' ? (
-                  <button
-                    onClick={handleDeactivateShop}
-                    className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-all flex items-center gap-1"
-                  >
-                    <FaPause className="text-xs" />
-                    Deactivate
-                  </button>
-                ) : shop.status === 'inactive' ? (
-                  <button
-                    onClick={handleReactivateShop}
-                    className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-all flex items-center gap-1"
-                  >
-                    <FaPlay className="text-xs" />
-                    Reactivate
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            {/* Danger Zone */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-red-700">Danger Zone</label>
+            {/* Delete Shop on next line */}
+            <div className="pt-4 border-t border-gray-200">
+              <label className="block text-sm font-medium text-red-700 mb-2">Danger Zone</label>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="bg-red-500 text-white px-3 py-2 rounded text-sm hover:bg-red-600 transition-all flex items-center gap-2 w-full justify-center"
+                className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition-all flex items-center gap-2"
               >
                 <FaTrash className="text-xs" />
                 Delete Shop
               </button>
-              <p className="text-xs text-gray-500">Permanent deletion</p>
+              <p className="text-xs text-gray-500 mt-1">This action cannot be undone</p>
             </div>
           </div>
         </div>
@@ -462,39 +334,110 @@ const MyShop = () => {
           {/* Main Shop Info */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">              {/* Shop Header */}
-              <div className="h-32 bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500 relative overflow-hidden">
+              <div className="relative">
                 {/* Shop Banner Background */}
-                {shop.banner && (
-                  <img 
-                    src={shop.banner} 
-                    alt="Shop Banner" 
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                )}
-                {/* Overlay for text readability */}
-                <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-                
-                <div className="absolute bottom-4 left-6 right-6 flex items-end gap-4 z-10">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+                <div className="h-48 relative overflow-hidden" style={{ backgroundColor: '#10b981' }}>
+                  {/* Banner Image */}
+                  {shop.banner && (
+                    <img 
+                      src={shop.banner} 
+                      alt="Shop Banner" 
+                      style={{ 
+                        position: 'absolute',
+                        top: '0px',
+                        left: '0px',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: '1',
+                        display: 'block',
+                        opacity: '1'
+                      }}
+                    />
+                  )}
+                  
+                  {/* Light overlay for text readability */}
+                  <div style={{ 
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.15)',
+                    zIndex: '2'
+                  }}></div>
+                  
+                  {/* Shop Logo */}
+                  <div style={{ 
+                    position: 'absolute',
+                    top: '24px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: '10',
+                    width: '80px',
+                    height: '80px',
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '4px solid white',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.3)'
+                  }}>
                     {shop.logo ? (
                       <img 
                         src={shop.logo} 
                         alt="Shop Logo" 
-                        className="w-full h-full object-cover"
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover',
+                          borderRadius: '50%'
+                        }}
                       />
                     ) : (
-                      <FaStore className="text-2xl text-emerald-600" />
+                      <FaStore style={{ fontSize: '24px', color: '#059669' }} />
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-white mb-1 drop-shadow-lg">{shop.name}</h2>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-white bg-opacity-20 px-2 py-1 rounded text-white text-sm backdrop-blur-sm">
+                  
+                  {/* Shop Info at bottom */}
+                  <div style={{ 
+                    position: 'absolute',
+                    bottom: '16px',
+                    left: '24px',
+                    right: '24px',
+                    textAlign: 'center',
+                    zIndex: '10'
+                  }}>
+                    <h2 style={{ 
+                      fontSize: '24px', 
+                      fontWeight: 'bold', 
+                      color: 'white', 
+                      marginBottom: '8px',
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.7)'
+                    }}>
+                      {shop.name}
+                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <span style={{ 
+                        backgroundColor: 'rgba(255,255,255,0.2)', 
+                        padding: '4px 12px', 
+                        borderRadius: '20px', 
+                        color: 'white', 
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}>
                         {shop.category}
                       </span>
                       {getStatusBadge(shop.status)}
                       {shop.verified && (
-                        <span className="bg-blue-500 text-white px-2 py-1 rounded text-sm">
+                        <span style={{ 
+                          backgroundColor: '#3b82f6', 
+                          color: 'white', 
+                          padding: '4px 8px', 
+                          borderRadius: '4px', 
+                          fontSize: '14px'
+                        }}>
                           ✓ Verified
                         </span>
                       )}
@@ -562,20 +505,25 @@ const MyShop = () => {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <FaPhone className="text-emerald-600" />
-                  <span className="text-gray-700">{shop.mobile}</span>
-                </div>
-                {shop.email && (
-                  <div className="flex items-center gap-3">
-                    <FaEnvelope className="text-emerald-600" />
-                    <span className="text-gray-700 break-all">{shop.email}</span>
+                {/* Phone and Email in one line on mobile when both exist */}
+                <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-4">
+                  <div className="flex items-center gap-2">
+                    <FaPhone className="text-emerald-600 text-sm" />
+                    <span className="text-gray-700 text-sm">{shop.mobile}</span>
                   </div>
-                )}
+                  {shop.email && (
+                    <div className="flex items-center gap-2">
+                      <FaEnvelope className="text-emerald-600 text-sm" />
+                      <span className="text-gray-700 text-sm break-all">{shop.email}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Address */}
                 {shop.address && (
                   <div className="flex items-start gap-3">
-                    <FaMapMarkerAlt className="text-emerald-600 mt-1" />
-                    <div className="text-gray-700">
+                    <FaMapMarkerAlt className="text-emerald-600 mt-1 text-sm" />
+                    <div className="text-gray-700 text-sm">
                       {shop.address.street && <div>{shop.address.street}</div>}
                       <div>
                         {[shop.address.city, shop.address.state].filter(Boolean).join(', ')}
@@ -595,13 +543,13 @@ const MyShop = () => {
               </h3>
               <div className="space-y-2 text-sm">
                 {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                  <div key={day} className="flex justify-between">
-                    <span className="capitalize font-medium">{day}</span>
-                    <span className={
+                  <div key={day} className="flex justify-between items-center">
+                    <span className="capitalize font-medium text-gray-700 min-w-[80px]">{day.slice(0, 3)}</span>
+                    <span className={`text-right ${
                       shop.operatingHours?.[day]?.isOpen 
                         ? 'text-gray-600' 
                         : 'text-red-500'
-                    }>
+                    }`}>
                       {shop.operatingHours?.[day]?.isOpen 
                         ? `${formatTime(shop.operatingHours[day].open)} - ${formatTime(shop.operatingHours[day].close)}`
                         : 'Closed'
@@ -617,41 +565,42 @@ const MyShop = () => {
         {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-6">Quick Actions</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Two buttons per line on mobile, full grid on larger screens */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
               to="/dashboard/uploadproduct"
               className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg p-4 text-center transition-all group"
             >
-              <FaPlus className="text-3xl text-emerald-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-              <h4 className="font-semibold text-emerald-800">Add Product</h4>
-              <p className="text-emerald-600 text-sm">Upload new products</p>
+              <FaPlus className="text-2xl sm:text-3xl text-emerald-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <h4 className="font-semibold text-emerald-800 text-sm sm:text-base">Add Product</h4>
+              <p className="text-emerald-600 text-xs sm:text-sm">Upload new products</p>
             </Link>
 
             <Link
               to="/dashboard/product"
               className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 text-center transition-all group"
             >
-              <FaBox className="text-3xl text-blue-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-              <h4 className="font-semibold text-blue-800">My Products</h4>
-              <p className="text-blue-600 text-sm">Manage your listings</p>
+              <FaBox className="text-2xl sm:text-3xl text-blue-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <h4 className="font-semibold text-blue-800 text-sm sm:text-base">My Products</h4>
+              <p className="text-blue-600 text-xs sm:text-sm">Manage your listings</p>
             </Link>
 
             <Link
               to="/dashboard/seller-orders"
               className="bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg p-4 text-center transition-all group"
             >
-              <FaBox className="text-3xl text-orange-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-              <h4 className="font-semibold text-orange-800">Orders</h4>
-              <p className="text-orange-600 text-sm">View & manage orders</p>
+              <FaBox className="text-2xl sm:text-3xl text-orange-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <h4 className="font-semibold text-orange-800 text-sm sm:text-base">Orders</h4>
+              <p className="text-orange-600 text-xs sm:text-sm">View & manage orders</p>
             </Link>
 
             <Link
               to="/chat"
               className="bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg p-4 text-center transition-all group"
             >
-              <FaUsers className="text-3xl text-purple-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-              <h4 className="font-semibold text-purple-800">Customer Chat</h4>
-              <p className="text-purple-600 text-sm">Message customers</p>
+              <FaUsers className="text-2xl sm:text-3xl text-purple-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <h4 className="font-semibold text-purple-800 text-sm sm:text-base">Customer Chat</h4>
+              <p className="text-purple-600 text-xs sm:text-sm">Message customers</p>
             </Link>
           </div>
         </div>
@@ -659,7 +608,7 @@ const MyShop = () => {
       
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg opacity-90 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
               <FaTrash className="text-red-500 text-xl" />
@@ -711,6 +660,7 @@ const MyShop = () => {
         />
       )}
     </div>
+    </DashboardMobileLayout>
   );
 };
 

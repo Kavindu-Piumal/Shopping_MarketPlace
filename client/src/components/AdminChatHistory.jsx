@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import Axios from '../utils/Axios';
 import summaryApi from '../common/summaryApi';
 import { useNotification } from '../context/NotificationContext';
+import DashboardMobileLayout from './DashboardMobileLayout';
 
 const AdminChatHistory = () => {
     const { showSuccess, showError, axiosNotificationError } = useNotification();
@@ -119,20 +120,22 @@ const AdminChatHistory = () => {
     }
 
     return (
-        <div className="bg-gradient-to-br from-gray-50 via-blue-100 to-indigo-50 min-h-screen">
-            {/* Privacy Warning Banner */}
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+        <DashboardMobileLayout>
+            <div className="bg-gradient-to-br from-gray-50 via-blue-100 to-indigo-50 min-h-screen">
+                {/* Privacy Warning Banner - More compact on mobile */}
+                <div className="bg-red-50 border-l-4 border-red-400 p-2 lg:p-4 mb-3 lg:mb-6">
                 <div className="flex">
                     <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 lg:h-5 lg:w-5 text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
                     </div>
                     <div className="ml-3">
-                        <h3 className="text-sm font-medium text-red-800">Privacy & Ethics Notice</h3>
-                        <div className="mt-2 text-sm text-red-700">
-                            <p>You are accessing private user communications. This action is logged and audited. Only access chats when:</p>
-                            <ul className="list-disc ml-5 mt-1">
+                        <h3 className="text-xs lg:text-sm font-medium text-red-800">Privacy & Ethics Notice</h3>
+                        <div className="mt-1 lg:mt-2 text-xs lg:text-sm text-red-700">
+                            <p className="hidden lg:block">You are accessing private user communications. This action is logged and audited. Only access chats when:</p>
+                            <p className="lg:hidden">Accessing private communications - logged & audited</p>
+                            <ul className="list-disc ml-5 mt-1 text-xs hidden lg:block">
                                 <li>Resolving customer disputes</li>
                                 <li>Investigating fraud or policy violations</li>
                                 <li>Complying with legal requirements</li>
@@ -143,33 +146,37 @@ const AdminChatHistory = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto p-4">
+            <div className="max-w-7xl mx-auto p-2 lg:p-4">
                 <div className="bg-white/90 rounded-xl shadow-lg overflow-hidden">
-                    {/* Header */}
-                    <div className="p-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-                        <h1 className="text-2xl font-bold flex items-center gap-3">
-                            <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    {/* Header - More compact on mobile */}
+                    <div className="p-3 lg:p-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+                        <h1 className="text-lg lg:text-2xl font-bold flex items-center gap-2 lg:gap-3">
+                            <svg className="w-5 h-5 lg:w-8 lg:h-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
-                            Admin Chat History Monitor
+                            <span className="hidden lg:inline">Admin Chat History Monitor</span>
+                            <span className="lg:hidden">Chat Monitor</span>
                         </h1>
-                        <p className="text-blue-100 mt-1">Monitor and review encrypted chat communications responsibly</p>
+                        <p className="text-blue-100 mt-1 text-xs lg:text-base">
+                            <span className="hidden lg:inline">Monitor and review encrypted chat communications responsibly</span>
+                            <span className="lg:hidden">Review communications responsibly</span>
+                        </p>
                     </div>
 
-                    {/* Controls */}
-                    <div className="p-6 border-b border-gray-200 bg-gray-50">
-                        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                            <div className="flex flex-col md:flex-row gap-4 flex-1">
+                    {/* Controls - More compact on mobile */}
+                    <div className="p-3 lg:p-6 border-b border-gray-200 bg-gray-50">
+                        <div className="flex flex-col gap-3 lg:gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex flex-col gap-3 lg:gap-4 lg:flex-row flex-1">
                                 {/* Search */}
                                 <div className="relative flex-1">
                                     <input
                                         type="text"
-                                        placeholder="Search chats by user, product, or order ID..."
+                                        placeholder="Search chats..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        className="w-full pl-8 lg:pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
                                     />
-                                    <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400 absolute left-2 lg:left-3 top-2.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
@@ -178,7 +185,7 @@ const AdminChatHistory = () => {
                                 <select
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value)}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="px-3 lg:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
                                 >
                                     <option value="all">All Chats</option>
                                     <option value="active">Active</option>
@@ -188,8 +195,8 @@ const AdminChatHistory = () => {
                                 </select>
                             </div>
 
-                            {/* Encryption Toggle */}
-                            <div className="flex items-center gap-2">
+                            {/* Encryption Toggle & Refresh */}
+                            <div className="flex items-center justify-between gap-2">
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -197,11 +204,14 @@ const AdminChatHistory = () => {
                                         onChange={(e) => setShowEncrypted(e.target.checked)}
                                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                     />
-                                    <span className="text-sm text-gray-700">Show encrypted content</span>
+                                    <span className="text-xs lg:text-sm text-gray-700">
+                                        <span className="hidden lg:inline">Show encrypted content</span>
+                                        <span className="lg:hidden">Encrypted</span>
+                                    </span>
                                 </label>
                                 <button
                                     onClick={fetchChatHistory}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                                    className="px-3 lg:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm"
                                 >
                                     Refresh
                                 </button>
@@ -209,78 +219,82 @@ const AdminChatHistory = () => {
                         </div>
                     </div>
 
-                    {/* Chat List */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+                    {/* Chat List - 2 columns on mobile, responsive */}
+                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-6 p-3 lg:p-6 max-h-[70vh] lg:max-h-none overflow-y-auto">
                         {loading ? (
                             <div className="col-span-full flex justify-center py-8">
                                 <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full"></div>
                             </div>
                         ) : filteredChats.length === 0 ? (
                             <div className="col-span-full text-center py-8">
-                                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+                                <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                 </svg>
-                                <p className="text-gray-500 font-medium">No chats found</p>
-                                <p className="text-gray-400 text-sm">Try adjusting your search or filter criteria</p>
+                                <p className="text-gray-500 font-medium text-sm lg:text-base">No chats found</p>
+                                <p className="text-gray-400 text-xs lg:text-sm">Try adjusting your search or filter criteria</p>
                             </div>
                         ) : (
                             filteredChats.map((chat) => (
                                 <div
                                     key={chat._id}
                                     onClick={() => setSelectedChat(chat)}
-                                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                                    className="bg-white border border-gray-200 rounded-lg p-2 lg:p-4 hover:shadow-md transition-shadow cursor-pointer"
                                 >
-                                    <div className="flex items-start gap-3 mb-3">
+                                    <div className="flex items-start gap-2 lg:gap-3 mb-2 lg:mb-3">
                                         <img
                                             src={chat.productId?.image?.[0] || '/placeholder-product.png'}
                                             alt={chat.productId?.name}
-                                            className="w-12 h-12 rounded-lg object-cover border-2 border-gray-200"
+                                            className="w-8 h-8 lg:w-12 lg:h-12 rounded-lg object-cover border-2 border-gray-200"
                                         />
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-medium text-gray-900 truncate">{chat.productId?.name}</h4>
-                                            <p className="text-sm text-gray-600">Order: {chat.orderId?.orderId}</p>
+                                            <h4 className="font-medium text-gray-900 truncate text-xs lg:text-sm">{chat.productId?.name}</h4>
+                                            <p className="text-xs lg:text-sm text-gray-600 truncate">#{chat.orderId?.orderId}</p>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2 text-sm">
+                                    <div className="space-y-1 lg:space-y-2 text-xs lg:text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-gray-500">Buyer:</span>
-                                            <span className="text-gray-900">{chat.buyerId?.name}</span>
+                                            <span className="text-gray-900 truncate ml-1">{chat.buyerId?.name}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-500">Seller:</span>
-                                            <span className="text-gray-900">{chat.sellerId?.name}</span>
+                                            <span className="text-gray-900 truncate ml-1">{chat.sellerId?.name}</span>
                                         </div>
-                                        <div className="flex justify-between">
+                                        <div className="flex justify-between lg:hidden">
+                                            <span className="text-gray-500">Msgs:</span>
+                                            <span className="text-gray-900">{chat.messageCount || 0}</span>
+                                        </div>
+                                        <div className="hidden lg:flex justify-between">
                                             <span className="text-gray-500">Messages:</span>
                                             <span className="text-gray-900">{chat.messageCount || 0}</span>
                                         </div>
-                                        <div className="flex justify-between">
+                                        <div className="hidden lg:flex justify-between">
                                             <span className="text-gray-500">Created:</span>
                                             <span className="text-gray-900">{formatDate(chat.createdAt)}</span>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                        <div className="flex gap-2">
-                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                    <div className="flex items-center justify-between mt-2 lg:mt-3 pt-2 lg:pt-3 border-t border-gray-100">
+                                        <div className="flex gap-1 lg:gap-2">
+                                            <span className={`text-xs px-1 lg:px-2 py-1 rounded-full font-medium ${
                                                 chat.orderCompleted 
                                                     ? 'bg-green-100 text-green-700' 
                                                     : chat.orderConfirmed
                                                         ? 'bg-blue-100 text-blue-700'
                                                         : 'bg-orange-100 text-orange-700'
                                             }`}>
-                                                {chat.orderCompleted ? 'Completed' : chat.orderConfirmed ? 'Confirmed' : 'Pending'}
+                                                {chat.orderCompleted ? 'Done' : chat.orderConfirmed ? 'Confirmed' : 'Pending'}
                                             </span>
                                             
                                             {(chat.deletedByBuyer || chat.deletedBySeller) && (
-                                                <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 font-medium">
-                                                    Deleted
+                                                <span className="text-xs px-1 lg:px-2 py-1 rounded-full bg-red-100 text-red-700 font-medium">
+                                                    Del
                                                 </span>
                                             )}
                                         </div>
 
-                                        <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg className="w-3 h-3 lg:w-4 lg:h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                                         </svg>
                                     </div>
@@ -291,7 +305,7 @@ const AdminChatHistory = () => {
 
                     {/* Chat Detail Modal */}
                     {selectedChat && (
-                        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                        <div className="fixed inset-0 flex items-center justify-center z-50 bg-neutral-800 bg opacity-90">
                             <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-6">
@@ -367,7 +381,7 @@ const AdminChatHistory = () => {
 
                     {/* Justification Modal */}
                     {showJustificationModal && (
-                        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                        <div className="fixed inset-0 flex items-center justify-center z-50 bg-neutral-800 bg opacity-90">
                             <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                                 <div className="p-6">
                                     <h3 className="text-lg font-bold text-gray-900 mb-4">Access Justification Required</h3>
@@ -409,7 +423,8 @@ const AdminChatHistory = () => {
                     )}
                 </div>
             </div>
-        </div>
+            </div>
+        </DashboardMobileLayout>
     );
 };
 

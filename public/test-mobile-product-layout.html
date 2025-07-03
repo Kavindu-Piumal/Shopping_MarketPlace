@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Product Card Layout - Add-to-Cart Removed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #059669;
+            border-radius: 10px;
+            background: #f0f9ff;
+        }
+        h2 {
+            color: #059669;
+            margin-bottom: 15px;
+        }
+        .success {
+            color: #059669;
+            font-weight: bold;
+        }
+        .improvement {
+            background: #dcfce7;
+            border-left: 4px solid #059669;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #059669;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px 5px 5px 0;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .before {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+        }
+        .after {
+            background: #f0fdf4;
+            border: 2px solid #bbf7d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="text-align: center; color: #059669;">📱 Mobile Product Cards - Add-to-Cart Removed</h1>
+        
+        <div class="test-section">
+            <h2>🎯 IMPROVEMENT IMPLEMENTED</h2>
+            <div class="improvement">
+                <strong>Change:</strong> Removed add-to-cart button from mobile product cards in home section
+            </div>
+            <div class="improvement">
+                <strong>Reason:</strong> Users can tap product card to view details and add to cart there
+            </div>
+            <div class="improvement">
+                <strong>Benefit:</strong> Cleaner layout with more space for product information
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Before vs After</h2>
+            <div class="comparison">
+                <div class="before">
+                    <h3>❌ Before</h3>
+                    <ul>
+                        <li>Add-to-cart button took space</li>
+                        <li>Cards felt cramped</li>
+                        <li>Too many interactive elements</li>
+                        <li>Difficult mobile navigation</li>
+                    </ul>
+                </div>
+                <div class="after">
+                    <h3>✅ After</h3>
+                    <ul>
+                        <li>Clean, spacious layout</li>
+                        <li>Focus on product info</li>
+                        <li>Single tap to view details</li>
+                        <li>Better mobile UX</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📱 Mobile Behavior</h2>
+            <p><strong>Mobile (≤640px):</strong></p>
+            <ul>
+                <li>✅ Add-to-cart button hidden (<code>hidden sm:block</code>)</li>
+                <li>✅ Reduced card padding (0.5rem instead of 0.75rem)</li>
+                <li>✅ More compact layout</li>
+                <li>✅ Better space utilization</li>
+            </ul>
+            
+            <p><strong>Desktop (>640px):</strong></p>
+            <ul>
+                <li>✅ Add-to-cart button still visible</li>
+                <li>✅ Full functionality maintained</li>
+                <li>✅ Normal layout preserved</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Test Pages</h2>
+            <p>Test the updated mobile layout on:</p>
+            <a href="http://localhost:5173" class="link">Home Page</a>
+            <a href="http://localhost:5173/shops" class="link">Shops Page</a>
+            <a href="http://localhost:5173/products" class="link">Products Page</a>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 What to Verify</h2>
+            <ul>
+                <li>✅ Mobile: No add-to-cart buttons visible in product cards</li>
+                <li>✅ Mobile: Cards are more compact and spacious</li>
+                <li>✅ Mobile: Tapping card opens product details</li>
+                <li>✅ Desktop: Add-to-cart buttons still work normally</li>
+                <li>✅ Product detail pages: Add-to-cart functionality intact</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🛠️ Files Modified</h2>
+            <ul>
+                <li><code>CardProduct.jsx</code> - Added <code>hidden sm:block</code> to add-to-cart section</li>
+                <li><code>index.css</code> - Updated mobile product card spacing and layout</li>
+                <li>Reduced mobile card padding for better space utilization</li>
+                <li>Adjusted content layout for mobile without add-to-cart section</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2 class="success">🎯 Expected Result</h2>
+            <p>Mobile product cards now provide:</p>
+            <ul style="color: #059669;">
+                <li>✅ Cleaner, more spacious layout</li>
+                <li>✅ Better focus on product information</li>
+                <li>✅ Simplified user interaction (tap to view details)</li>
+                <li>✅ More content visible per card</li>
+                <li>✅ Improved mobile browsing experience</li>
+            </ul>
+            
+            <p><strong>User Flow:</strong> Browse products → Tap interesting product → View details → Add to cart</p>
+        </div>
+    </div>
+
+    <script>
+        console.log('📱 Mobile Product Card Layout Test Loaded');
+        console.log('🎯 Add-to-cart buttons removed from mobile product cards');
+        console.log('✅ Layout optimized for better mobile experience');
+    </script>
+</body>
+</html>

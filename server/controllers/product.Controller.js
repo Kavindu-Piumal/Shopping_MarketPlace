@@ -430,3 +430,60 @@ export const getMyProductsController = async (req, res) => {
         });
     }
 }
+
+// Hot Deals Controller - Products with high discounts
+export const getHotDealsController = async (req, res) => {
+    try {
+        let { page, limit, minDiscount } = req.body;
+        
+        // Default values
+        if (!page) page = 1;
+        if (!limit) limit = 20;
+        if (!minDiscount) minDiscount = 30; // Default minimum discount percentage
+        
+        const skip = (page - 1) * limit;
+        
+        // Find products with discount >= minDiscount and stock > 0
+        const query = {
+            discount: { $gte: minDiscount },
+            stock: { $gt: 0 }
+        };
+        
+        // 🎯 SELLER EXPERIENCE: Exclude seller's own products from hot deals
+        if (req.userId && req.user && req.user.role === 'seller') {
+            query.sellerId = { $ne: req.userId };
+            console.log(`🚫 Filtering out hot deals for seller ${req.userId} with min discount ${minDiscount}%`);
+        } else {
+            console.log(`👀 Public hot deals view with min discount ${minDiscount}% - no filtering applied`);
+        }
+        
+        const [data, totalCount] = await Promise.all([
+            ProductModel.find(query)
+                .sort({ discount: -1, createdAt: -1 }) // Sort by highest discount first, then newest
+                .skip(skip)
+                .limit(limit)
+                .populate("category subCategory"),
+            ProductModel.countDocuments(query)
+        ]);
+        
+        const totalPage = Math.ceil(totalCount / limit);
+        
+        return res.status(200).json({
+            message: "Hot deals fetched successfully",
+            data: data,
+            totalPage: totalPage,
+            page: page,
+            limit: limit,
+            totalCount: totalCount,
+            error: false,
+            success: true
+        });
+        
+    } catch (error) {
+        res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}

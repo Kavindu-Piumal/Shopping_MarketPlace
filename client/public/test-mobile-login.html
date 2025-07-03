@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Login Page Test</title>
+    <style>
+        /* Mobile-first responsive design */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .header-logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .header-auth-section .login-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* Main content */
+        .main-content {
+            margin-top: 60px;
+            min-height: calc(100vh - 60px);
+            padding: 20px 16px;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        .login-form {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 40px auto;
+        }
+
+        .login-form h1 {
+            text-align: center;
+            margin-bottom: 24px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .login-button {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-top: 16px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            color: #666;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: #007bff;
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 2px;
+            background: currentColor;
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        /* Login page specific styles - this simulates the CSS classes added by React */
+        body.login-route .bottom-nav {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        body.login-route .header-auth-section .login-btn {
+            display: none !important;
+        }
+
+        body.auth-route .bottom-nav {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        body.auth-route .header-auth-section .login-btn {
+            display: none !important;
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+                padding-bottom: 80px;
+            }
+
+            .login-form {
+                margin: 20px auto;
+                padding: 20px;
+            }
+
+            body.login-route,
+            body.auth-route {
+                padding-bottom: 60px;
+            }
+
+            body.login-route .page-container,
+            body.auth-route .page-container {
+                padding-bottom: 80px;
+                min-height: calc(100vh - 60px);
+            }
+        }
+
+        /* Test buttons */
+        .test-controls {
+            position: fixed;
+            top: 70px;
+            right: 10px;
+            z-index: 200;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .test-button {
+            display: block;
+            width: 100%;
+            margin: 4px 0;
+            padding: 4px 8px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 2px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Test Controls -->
+    <div class="test-controls">
+        <div>Test Controls:</div>
+        <button class="test-button" onclick="addLoginRoute()">Add login-route</button>
+        <button class="test-button" onclick="addAuthRoute()">Add auth-route</button>
+        <button class="test-button" onclick="removeRoutes()">Remove routes</button>
+        <button class="test-button" onclick="checkClasses()">Check classes</button>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo">YourApp</div>
+        <div class="header-auth-section">
+            <button class="login-btn">Login</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="login-form">
+            <h1>Login to Your Account</h1>
+            <form>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="login-button">Login</button>
+            </form>
+        </div>
+
+        <div style="background: white; padding: 20px; margin: 20px auto; max-width: 400px; border-radius: 8px;">
+            <h3>Test Instructions:</h3>
+            <p>1. Use the test buttons in the top-right to simulate route changes</p>
+            <p>2. When "login-route" or "auth-route" is added:</p>
+            <ul style="margin-left: 20px;">
+                <li>✅ Bottom navigation should stay visible</li>
+                <li>✅ Header login button should be hidden</li>
+            </ul>
+            <p>3. When routes are removed:</p>
+            <ul style="margin-left: 20px;">
+                <li>✅ Header login button should be visible again</li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item">
+            <div class="nav-icon"></div>
+            <span>Home</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon"></div>
+            <span>Search</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon"></div>
+            <span>Cart</span>
+        </a>
+        <a href="#" class="nav-item active">
+            <div class="nav-icon"></div>
+            <span>Account</span>
+        </a>
+    </nav>
+
+    <script>
+        function addLoginRoute() {
+            document.body.classList.remove('auth-route');
+            document.body.classList.add('login-route', 'auth-route');
+            console.log('Added login-route and auth-route classes');
+            updateStatus();
+        }
+
+        function addAuthRoute() {
+            document.body.classList.remove('login-route');
+            document.body.classList.add('auth-route');
+            console.log('Added auth-route class');
+            updateStatus();
+        }
+
+        function removeRoutes() {
+            document.body.classList.remove('login-route', 'auth-route');
+            console.log('Removed all route classes');
+            updateStatus();
+        }
+
+        function checkClasses() {
+            const classes = Array.from(document.body.classList);
+            console.log('Current body classes:', classes);
+            alert('Current body classes: ' + classes.join(', '));
+        }
+
+        function updateStatus() {
+            const hasLogin = document.body.classList.contains('login-route');
+            const hasAuth = document.body.classList.contains('auth-route');
+            console.log('Status - login-route:', hasLogin, 'auth-route:', hasAuth);
+        }
+
+        // Show initial status
+        console.log('Mobile Login Page Test Loaded');
+        updateStatus();
+    </script>
+</body>
+</html>

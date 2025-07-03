@@ -1,7 +1,7 @@
 import { Router } from "express";
 import auth from "../middleware/auth.js";
 import optionalAuth from "../middleware/optionalAuth.js";
-import { createProductController, deleteProductController, getProductbucategoryandsubcategoryController, getProductbyCategoryController, getProductbyController, getProductController, searchProduct, updateProductDetailsController, getMyProductsController } from "../controllers/product.Controller.js";
+import { createProductController, deleteProductController, getProductbucategoryandsubcategoryController, getProductbyCategoryController, getProductbyController, getProductController, searchProduct, updateProductDetailsController, getMyProductsController, getHotDealsController } from "../controllers/product.Controller.js";
 import { Admin } from "../middleware/Admin.js";
 
 
@@ -19,5 +19,6 @@ productRouter.post("/getproductby-category", optionalAuth, getProductbyCategoryC
 productRouter.post("/getproductby-category-and-subcategory", optionalAuth, getProductbucategoryandsubcategoryController)
 productRouter.post("/getproductdetails", getProductbyController)
 productRouter.post("/search-product", optionalAuth, searchProduct);
+productRouter.post("/hot-deals", optionalAuth, getHotDealsController);
 
 export default productRouter;

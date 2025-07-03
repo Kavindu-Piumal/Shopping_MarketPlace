@@ -10,6 +10,7 @@ import EditCategory from '../components/EditCategory';
 import ConfirmBox from '../components/ConfirmBox';
 import { useSelector, useDispatch } from 'react-redux';
 import { setAllCategory } from '../Store/ProductSlice';
+import DashboardMobileLayout from '../components/DashboardMobileLayout';
 
 
 
@@ -85,11 +86,12 @@ const Category = () => {
 
   
   return (
-    <section>
-      <div className='p-2  font-semibold bg-white shadow-md flex items-center justify-between'>
-        <h2>Category</h2>
-        <button onClick={()=>setOpenUploadCategory(true)} className='text-sm border border-primary-200 hover:bg-green-300 px-3 py-1 rounded'>Add Category</button>
-      </div>
+    <DashboardMobileLayout>
+      <div className='bg-white'>
+        <div className='p-2 font-semibold bg-white shadow-md flex items-center justify-between'>
+          <h2>Category</h2>
+          <button onClick={()=>setOpenUploadCategory(true)} className='text-sm border border-primary-200 hover:bg-green-300 px-3 py-1 rounded'>Add Category</button>
+        </div>
 
       {
         !categorieData[0] && !loading && (
@@ -121,7 +123,29 @@ const Category = () => {
                   />
                 </div>
                 <p className="font-semibold text-emerald-900 text-center mt-1 bg-white bg-opacity-80 truncate">{category.name}</p>
-                <div className='h-9 items-center justify-end gap-3 hidden group-hover:flex px-2'>
+                {/* Show action buttons on mobile for admin/owners, on hover for desktop */}
+                <div className='h-9 items-center justify-end gap-3 flex lg:hidden px-2'>
+                  {canEdit ? (
+                    <button
+                      onClick={() => {
+                        setOpenEdit(true);
+                        setEditData(category);
+                      }}
+                      className='bg-emerald-100 text-emerald-700 text-xs px-3 py-1 rounded hover:bg-emerald-200 border border-emerald-300 font-medium transition'>Edit</button>
+                  ) : (
+                    <span className="text-xs text-gray-400">Prohibited</span>
+                  )}
+                  {isOwner &&  (
+                    <button
+                      onClick={() => {
+                        setOpenConfirmBoxDelete(true);
+                        setDeleteCategory(category);
+                      }}
+                      className='bg-red-100 text-red-600 text-xs px-3 py-1 rounded hover:bg-red-200 border border-red-200 font-medium transition'>Delete</button>
+                  )}
+                </div>
+                {/* Desktop hover buttons */}
+                <div className='h-9 items-center justify-end gap-3 hidden lg:group-hover:flex px-2'>
                   {canEdit ? (
                     <button
                       onClick={() => {
@@ -165,11 +189,8 @@ const Category = () => {
         )
       }
 
-
-      
-
-    </section>
-
+      </div>
+    </DashboardMobileLayout>
   )
 }
 

@@ -179,6 +179,8 @@ export const sendMessageController = async (req, res) => {
         const { chatId, receiverId, content, messageType = "text" } = req.body;
         const senderId = req.userId;
 
+        console.log(`💬 sendMessage - senderId: ${senderId}, receiverId: ${receiverId}, chatId: ${chatId}`);
+
         // Verify chat exists and user is part of it
         const chat = await ChatModel.findOne({
             _id: chatId,
@@ -195,7 +197,11 @@ export const sendMessageController = async (req, res) => {
                 error: true,
                 success: false
             });
-        }        // Create new message with encrypted content
+        }
+
+        console.log(`💬 Chat found - buyerId: ${chat.buyerId}, sellerId: ${chat.sellerId}`);
+
+        // Create new message with encrypted content
         const newMessage = new MessageModel({
             chatId: chatId,
             senderId: senderId,
@@ -207,9 +213,13 @@ export const sendMessageController = async (req, res) => {
         const savedMessage = await newMessage.save();
 
         // Update chat's updatedAt
-        await ChatModel.findByIdAndUpdate(chatId, { updatedAt: new Date() });        const populatedMessage = await MessageModel.findById(savedMessage._id)
+        await ChatModel.findByIdAndUpdate(chatId, { updatedAt: new Date() });
+
+        const populatedMessage = await MessageModel.findById(savedMessage._id)
             .populate('senderId', 'name')
-            .populate('receiverId', 'name');        // Decrypt message content before sending to frontend
+            .populate('receiverId', 'name');
+
+        // Decrypt message content before sending to frontend
         const decryptedMessage = {
             ...populatedMessage.toObject(),
             content: decryptMessage(populatedMessage.content)
@@ -222,10 +232,11 @@ export const sendMessageController = async (req, res) => {
 
         // Create message notification for the receiver
         try {
-            await createMessageNotification(chatId, content, senderId, receiverId);
-            console.log(`Created message notification for user ${receiverId}`);
+            console.log(`📨 Creating notification for receiverId: ${receiverId} from senderId: ${senderId}`);
+            await createMessageNotification(chatId, content, senderId, receiverId, req.io);
+            console.log(`✅ Created message notification for user ${receiverId}`);
         } catch (error) {
-            console.error('Error creating message notification:', error);
+            console.error('💥 Error creating message notification:', error);
         }
 
         return res.status(201).json({

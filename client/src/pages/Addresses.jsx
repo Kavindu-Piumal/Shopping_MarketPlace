@@ -8,6 +8,7 @@ import summaryApi from "../common/summaryApi";
 import { data } from "react-router-dom";
 import { useNotification } from "../context/NotificationContext";
 import { useGlobalcontext } from "../provider/globaleProvider";
+import DashboardMobileLayout from "../components/DashboardMobileLayout";
 
 const Addresses = () => {
   const { showSuccess, axiosNotificationError } = useNotification();
@@ -42,19 +43,28 @@ const Addresses = () => {
   }
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-100 to-lime-50 py-6 px-2">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 01-8 0M12 3v4m0 0a4 4 0 01-4 4H4m8-4a4 4 0 014 4h4m-8 0v10m0 0a4 4 0 01-4-4H4m8 4a4 4 0 004-4h4" /></svg>
-          <h1 className="text-2xl font-bold text-emerald-800 tracking-tight">Your Addresses</h1>
+    <DashboardMobileLayout>
+      <section className="bg-gradient-to-br from-green-50 via-emerald-100 to-lime-50 py-4 px-2">
+        <div className="max-w-5xl mx-auto">
+        {/* Header with improved layout since no search bar */}
+        <div className="bg-white/90 p-4 md:p-6 rounded-xl shadow-lg mb-4 border border-emerald-100">
+          <div className="flex items-center gap-3 mb-4">
+            <svg className="w-8 h-8 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 01-8 0M12 3v4m0 0a4 4 0 01-4 4H4m8-4a4 4 0 014 4h4m-8 0v10m0 0a4 4 0 01-4-4H4m8 4a4 4 0 004-4h4" />
+            </svg>
+            <div className="flex-1">
+              <h1 className="text-xl md:text-2xl font-bold text-emerald-800 tracking-tight">Your Addresses</h1>
+              <p className="text-sm text-emerald-600 mt-1">Manage your delivery addresses</p>
+            </div>
+          </div>
+          <button
+            className="border border-emerald-300 bg-emerald-100 text-emerald-800 px-5 py-2 rounded-lg font-semibold shadow hover:bg-emerald-200 transition w-full sm:w-auto"
+            onClick={() => setOpenAddress(true)}
+          >
+            + Add New Address
+          </button>
         </div>
-        <button
-          className="border border-emerald-300 bg-emerald-100 text-emerald-800 px-5 py-2 rounded-lg font-semibold shadow hover:bg-emerald-200 transition mb-4"
-          onClick={() => setOpenAddress(true)}
-        >
-          Add Address
-        </button>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
           {addressList.map((address, index) => {
             return (
               <div
@@ -102,6 +112,7 @@ const Addresses = () => {
         )}
       </div>
     </section>
+    </DashboardMobileLayout>
   );
 };
 

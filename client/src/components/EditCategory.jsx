@@ -97,7 +97,7 @@ const EditCategory = ({ close, fetchData, data: CategoryData }) => {
     );
   }
   return (
-    <section className="fixed top-0 bottom-0 left-0 right-0 p-4 bg-neutral-800 bg-opacity-90 flex items-center justify-center z-[60]">
+    <section className="fixed top-0 bottom-0 left-0 right-0 p-4 bg-neutral-800 bg opacity-90 flex items-center justify-center z-[60]">
           <div className="bg-white max-w-4xl w-full p-4 rounded shadow-2xl">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">Edit Category</h2>

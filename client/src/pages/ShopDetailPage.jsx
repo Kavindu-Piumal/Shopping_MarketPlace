@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaStore, FaStar, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaGlobe, FaFacebook, FaInstagram, FaTwitter, FaArrowLeft, FaTag, FaBox } from 'react-icons/fa';
 import Axios from '../utils/Axios';
 import summaryApi from '../common/summaryApi';
 import { useAxiosNotificationError } from '../utils/AxiosNotificationError';
 import Loading from '../components/Loading';
 import CardProduct from '../components/CardProduct';
-import ShopReviewSection from '../components/ShopReviewSection';
 import { useSelector } from 'react-redux';
 import isAdmin from '../utils/isAdmin';
 import AdminShopActions from '../components/AdminShopActions';
 
 const ShopDetailPage = () => {
   const { shopId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const axiosNotificationError = useAxiosNotificationError();
   const user = useSelector(state => state.user);
   
@@ -22,6 +23,31 @@ const ShopDetailPage = () => {
   const [productsLoading, setProductsLoading] = useState(false);
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Determine correct back navigation path
+  const getBackPath = () => {
+    // Check if user came from admin manage-shops page
+    const fromAdminPage = location.state?.from === 'admin-manage-shops' || 
+                         (document.referrer && document.referrer.includes('/dashboard/manage-shops'));
+    
+    // If user is admin and likely came from manage-shops, go back to admin page
+    if (isAdmin(user?.role) && fromAdminPage) {
+      return '/dashboard/manage-shops';
+    }
+    
+    // Default to public shops page
+    return '/shops';
+  };
+
+  const handleBackNavigation = (e) => {
+    e.preventDefault();
+    // Use browser history if available, otherwise use determined path
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate(getBackPath());
+    }
+  };
 
   useEffect(() => {
     fetchShopDetails();
@@ -92,9 +118,12 @@ const ShopDetailPage = () => {
         <div className="text-center">
           <FaStore className="text-6xl text-gray-300 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold text-gray-600 mb-2">Shop not found</h2>
-          <Link to="/shops" className="text-emerald-600 hover:underline">
+          <button 
+            onClick={handleBackNavigation}
+            className="text-emerald-600 hover:underline cursor-pointer"
+          >
             ← Back to Shops
-          </Link>
+          </button>
         </div>
       </div>
     );
@@ -103,12 +132,12 @@ const ShopDetailPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Back Button */}        <Link 
-          to="/shops" 
-          className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-6 font-medium"
+        {/* Back Button */}        <button 
+          onClick={handleBackNavigation}
+          className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-6 font-medium cursor-pointer"
         >
           <FaArrowLeft /> Back to Shops
-        </Link>
+        </button>
 
         {/* Admin Controls (visible only to admins) */}
         {isAdmin(user?.role) && shop && (
@@ -119,31 +148,66 @@ const ShopDetailPage = () => {
         )}        {/* Shop Header */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
           {/* Cover Image */}
-          <div className="h-48 bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500 relative">
+          <div className="h-48 relative overflow-hidden" style={{ backgroundColor: '#10b981' }}>
             {/* Shop Banner Background */}
             {shop.banner && (
               <img 
                 src={shop.banner} 
                 alt="Shop Banner" 
-                className="absolute inset-0 w-full h-full object-cover"
+                style={{ 
+                  position: 'absolute',
+                  top: '0px',
+                  left: '0px',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  zIndex: '1',
+                  display: 'block',
+                  opacity: '1'
+                }}
               />
             )}
-            <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-            <div className="absolute bottom-6 left-6 right-6">
+            
+            {/* Light overlay for text readability */}
+            <div style={{ 
+              position: 'absolute',
+              top: '0',
+              left: '0',
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              zIndex: '2'
+            }}></div>
+            
+            <div className="absolute bottom-6 left-6 right-6" style={{ zIndex: '10' }}>
               <div className="flex items-end gap-4">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+                <div style={{ 
+                  width: '80px',
+                  height: '80px',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+                  overflow: 'hidden'
+                }}>
                   {shop.logo ? (
                     <img 
                       src={shop.logo} 
                       alt="Shop Logo" 
-                      className="w-full h-full object-cover"
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover'
+                      }}
                     />
                   ) : (
-                    <FaStore className="text-3xl text-emerald-600" />
+                    <FaStore style={{ fontSize: '30px', color: '#059669' }} />
                   )}
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-white mb-2">{shop.name}</h1>
+                  <h1 className="text-3xl font-bold text-white mb-2" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>{shop.name}</h1>
                   <div className="flex items-center gap-4 text-white">
                     <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                       {shop.category}
@@ -343,7 +407,7 @@ const ShopDetailPage = () => {
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
                 {products.map(product => (
                   <CardProduct key={product._id} data={product} />
                 ))}
@@ -394,9 +458,6 @@ const ShopDetailPage = () => {
               <p className="text-gray-500">This shop hasn't added any products yet.</p>            </div>
           )}
         </div>
-
-        {/* Shop Reviews Section */}
-        <ShopReviewSection shopId={shopId} />
       </div>
     </div>
   );

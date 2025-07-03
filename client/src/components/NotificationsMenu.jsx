@@ -1,5 +1,5 @@
-import React from 'react';
-import { FaBell, FaShoppingBag, FaCheckCircle, FaTruck, FaCommentDots, FaTag, FaStore } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaBell, FaShoppingBag, FaCheckCircle, FaTruck, FaCommentDots, FaTag, FaStore, FaTimes } from 'react-icons/fa';
 import { useNotifications } from '../hooks/useNotifications';
 
 const getNotificationIcon = (type) => {
@@ -60,7 +60,60 @@ const formatNotificationTime = (timestamp) => {
 };
 
 const NotificationsMenu = ({ close }) => {
-  const { notifications, handleNotificationClick, clearAll, loading } = useNotifications();
+  const { notifications, handleNotificationClick, clearAll, deleteNotification, loading, fetchNotifications } = useNotifications();
+  const [clickedNotification, setClickedNotification] = useState(null);
+  const [clearingAll, setClearingAll] = useState(false);
+  const [deletingNotification, setDeletingNotification] = useState(null);
+
+  const handleNotificationClickWithLoading = async (notification) => {
+    if (clickedNotification === notification._id) return; // Prevent double clicks
+    
+    setClickedNotification(notification._id);
+    try {
+      await handleNotificationClick(notification);
+      close(); // Close menu after successful click
+    } catch (error) {
+      console.error('Error handling notification click:', error);
+    } finally {
+      setClickedNotification(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (clearingAll) return; // Prevent double clicks
+    
+    setClearingAll(true);
+    try {
+      const result = await clearAll();
+      if (!result.success) {
+        console.error('Clear all failed:', result.error);
+        // Optionally show error message to user
+      }
+    } catch (error) {
+      console.error('Error clearing all notifications:', error);
+    } finally {
+      setClearingAll(false);
+    }
+  };
+
+  const handleDeleteNotification = async (e, notificationId) => {
+    e.stopPropagation(); // Prevent triggering the notification click
+    
+    if (deletingNotification === notificationId) return; // Prevent double clicks
+    
+    setDeletingNotification(notificationId);
+    try {
+      const result = await deleteNotification(notificationId);
+      if (!result.success) {
+        console.error('Delete notification failed:', result.error);
+        // Optionally show error message to user
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    } finally {
+      setDeletingNotification(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -81,14 +134,32 @@ const NotificationsMenu = ({ close }) => {
           <FaBell className="text-emerald-600" />
           Notifications
         </h3>
-        {notifications.length > 0 && (
+        <div className="flex items-center gap-2">
+          {notifications.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              disabled={clearingAll}
+              className={`text-xs font-medium transition-colors ${
+                clearingAll 
+                  ? 'text-gray-400 cursor-wait' 
+                  : 'text-emerald-600 hover:text-emerald-800'
+              }`}
+            >
+              {clearingAll ? 'Clearing...' : 'Clear All'}
+            </button>
+          )}
+          {/* Debug: Manual refresh button - remove in production */}
           <button
-            onClick={clearAll}
-            className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+            onClick={() => {
+              console.log('🔄 Manual refresh notifications');
+              fetchNotifications();
+            }}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            title="Refresh notifications (debug)"
           >
-            Clear All
+            🔄
           </button>
-        )}
+        </div>
       </div>
 
       {/* Notifications List */}
@@ -102,12 +173,11 @@ const NotificationsMenu = ({ close }) => {
             return (
               <div
                 key={notif._id}
-                onClick={() => {
-                  handleNotificationClick(notif);
-                  close();
-                }}
+                onClick={() => handleNotificationClickWithLoading(notif)}
                 className={`p-3 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
-                  notif.read ? 'bg-gray-50' : `${bgColor} border border-emerald-200`
+                  clickedNotification === notif._id 
+                    ? 'opacity-50 cursor-wait' 
+                    : notif.read ? 'bg-gray-50' : `${bgColor} border border-emerald-200`
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -125,9 +195,23 @@ const NotificationsMenu = ({ close }) => {
                       {formatNotificationTime(notif.createdAt)}
                     </p>
                   </div>
-                  {!notif.read && (
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full mt-1"></div>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {!notif.read && (
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                    )}
+                    <button
+                      onClick={(e) => handleDeleteNotification(e, notif._id)}
+                      disabled={deletingNotification === notif._id}
+                      className={`p-1 rounded-full transition-colors ${
+                        deletingNotification === notif._id
+                          ? 'text-gray-400 cursor-wait'
+                          : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                      }`}
+                      title="Delete notification"
+                    >
+                      <FaTimes className="text-xs" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add to Cart Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-card {
+            width: 200px;
+            height: 380px;
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            margin: 20px;
+        }
+        .test-image {
+            width: 100%;
+            height: 100px;
+            background: #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .test-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .test-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .test-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #059669;
+            margin-bottom: 10px;
+        }
+        .test-button-area {
+            margin-top: auto;
+            padding-top: 10px;
+            min-height: 60px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .test-button {
+            width: 100%;
+            min-height: 48px;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #047857;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add to Cart Button Test</h1>
+    <p>Testing the layout and visibility of add-to-cart buttons in card format.</p>
+    
+    <div class="container">
+        <div class="test-card">
+            <div class="test-image"></div>
+            <div class="test-content">
+                <div class="test-title">Test Product 1</div>
+                <div class="test-price">₹199.00</div>
+                <div class="test-button-area">
+                    <button class="test-button">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-card">
+            <div class="test-image"></div>
+            <div class="test-content">
+                <div class="test-title">Test Product 2 with Longer Name</div>
+                <div class="test-price">₹299.00</div>
+                <div class="test-button-area">
+                    <button class="test-button">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-card">
+            <div class="test-image"></div>
+            <div class="test-content">
+                <div class="test-title">Test Product 3</div>
+                <div class="test-price">₹399.00</div>
+                <div class="test-button-area">
+                    <button class="test-button">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <p><a href="/">← Back to Home</a></p>
+</body>
+</html>

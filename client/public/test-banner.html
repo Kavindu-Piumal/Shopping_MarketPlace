@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Banner Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .banner-test { 
+            width: 400px; 
+            height: 200px; 
+            border: 2px solid #ccc; 
+            margin: 20px 0;
+            position: relative;
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+        .banner-test img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .debug { 
+            background: #f0f0f0; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Banner Image Test</h1>
+    <div class="debug">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Open browser developer tools (F12)</li>
+            <li>Go to Console tab</li>
+            <li>Look for shop data in the main app</li>
+            <li>Copy the banner URL and test it below</li>
+        </ol>
+    </div>
+    
+    <div class="debug">
+        <label>Banner URL: </label>
+        <input type="text" id="bannerUrl" style="width: 400px;" placeholder="Paste banner URL here">
+        <button onclick="testBanner()">Test Banner</button>
+    </div>
+    
+    <div class="banner-test" id="bannerContainer">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center;">
+            No banner loaded yet
+        </div>
+    </div>
+    
+    <div class="debug" id="results">
+        <strong>Results will appear here</strong>
+    </div>
+
+    <script>
+        function testBanner() {
+            const url = document.getElementById('bannerUrl').value.trim();
+            const container = document.getElementById('bannerContainer');
+            const results = document.getElementById('results');
+            
+            if (!url) {
+                alert('Please enter a banner URL');
+                return;
+            }
+            
+            results.innerHTML = '<strong>Testing URL:</strong> ' + url + '<br><br>';
+            
+            // Clear container
+            container.innerHTML = '';
+            
+            // Test 1: Try to load as image
+            const img = new Image();
+            
+            img.onload = function() {
+                results.innerHTML += '✅ Image loads successfully!<br>';
+                results.innerHTML += 'Dimensions: ' + this.naturalWidth + 'x' + this.naturalHeight + '<br>';
+                
+                // Show the image
+                const displayImg = document.createElement('img');
+                displayImg.src = url;
+                displayImg.style.width = '100%';
+                displayImg.style.height = '100%';
+                displayImg.style.objectFit = 'cover';
+                container.appendChild(displayImg);
+            };
+            
+            img.onerror = function() {
+                results.innerHTML += '❌ Image failed to load<br>';
+                container.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center;">Failed to load banner</div>';
+            };
+            
+            // Test 2: Try fetch request
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    results.innerHTML += '✅ URL is accessible via fetch<br>';
+                    results.innerHTML += 'Status: ' + response.status + '<br>';
+                    results.innerHTML += 'Content-Type: ' + response.headers.get('content-type') + '<br>';
+                })
+                .catch(error => {
+                    results.innerHTML += '❌ URL not accessible via fetch: ' + error.message + '<br>';
+                });
+            
+            img.src = url;
+        }
+        
+        // Auto-fill some common Cloudinary patterns for testing
+        window.addEventListener('load', function() {
+            const input = document.getElementById('bannerUrl');
+            input.placeholder = 'Example: https://res.cloudinary.com/your-cloud/image/upload/v123456789/ABC/banner.jpg';
+        });
+    </script>
+</body>
+</html>

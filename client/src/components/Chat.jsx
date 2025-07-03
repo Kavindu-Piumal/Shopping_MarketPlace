@@ -97,7 +97,10 @@ const Chat = () => {
                         const newChat = response.data.data;
                         setSelectedChat(newChat);
                         joinChat(newChat._id);
-                        showSuccess('Chat opened successfully!');
+                        // Only show success message if this is a direct chat creation, not from notification
+                        if (!searchParams.has('orderId')) {
+                            showSuccess('Chat opened successfully!');
+                        }
                     }
                 }
 
@@ -230,66 +233,79 @@ const Chat = () => {
         <div className="bg-gradient-to-br from-green-50 via-emerald-100 to-lime-50 min-h-screen">
             <PrivacyConsentBanner />
             <div className="max-w-7xl mx-auto p-4">
-                <div className="bg-white/90 rounded-xl shadow-lg overflow-hidden">                    <div className="p-6 bg-gradient-to-r from-emerald-400 to-lime-400 text-white">
-                        <h1 className="text-2xl font-bold flex items-center gap-3">
-                            <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <div className="bg-white/90 rounded-xl shadow-lg overflow-hidden">                    {/* Header - More compact on mobile */}
+                    <div className="p-3 lg:p-6 bg-gradient-to-r from-emerald-400 to-lime-400 text-white">
+                        <h1 className="text-lg lg:text-2xl font-bold flex items-center gap-2 lg:gap-3">
+                            <svg className="w-5 h-5 lg:w-8 lg:h-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
-                            Buyer-Seller Communication
+                            <span className="hidden lg:inline">Buyer-Seller Communication</span>
+                            <span className="lg:hidden">Messages</span>
                         </h1>
-                        <p className="text-emerald-100 mt-1">Connect with buyers and sellers for your orders</p>
+                        <p className="text-emerald-100 mt-1 text-xs lg:text-base">
+                            <span className="hidden lg:inline">Connect with buyers and sellers for your orders</span>
+                            <span className="lg:hidden">Chat with buyers & sellers</span>
+                        </p>
                     </div>
                     
                     {!user ? (
-                        // Login Required UI (Beautiful and Encouraging)
-                        <div className="h-[600px] flex items-center justify-center bg-gradient-to-br from-emerald-50 to-lime-50">
-                            <div className="text-center max-w-md mx-auto p-8">
-                                <div className="bg-white rounded-xl shadow-lg p-8 border border-emerald-100">
-                                    <div className="mb-6">
-                                        <svg className="w-20 h-20 mx-auto text-emerald-400 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                        // Login Required UI - More compact on mobile
+                        <div className="h-[400px] lg:h-[600px] flex items-center justify-center bg-gradient-to-br from-emerald-50 to-lime-50">
+                            <div className="text-center max-w-md mx-auto p-4 lg:p-8">
+                                <div className="bg-white rounded-xl shadow-lg p-4 lg:p-8 border border-emerald-100">
+                                    <div className="mb-4 lg:mb-6">
+                                        <svg className="w-12 h-12 lg:w-20 lg:h-20 mx-auto text-emerald-400 mb-3 lg:mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                         </svg>
-                                        <h2 className="text-2xl font-bold text-emerald-800 mb-2">Welcome to Chat!</h2>
-                                        <p className="text-emerald-600 mb-6">
-                                            Connect with sellers, ask questions about products, and track your orders through our secure messaging system.
+                                        <h2 className="text-lg lg:text-2xl font-bold text-emerald-800 mb-2">Welcome to Chat!</h2>
+                                        <p className="text-emerald-600 mb-4 lg:mb-6 text-sm lg:text-base">
+                                            <span className="hidden lg:inline">
+                                                Connect with sellers, ask questions about products, and track your orders through our secure messaging system.
+                                            </span>
+                                            <span className="lg:hidden">
+                                                Connect with sellers and track orders.
+                                            </span>
                                         </p>
                                     </div>
                                     
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-3 text-emerald-700">
-                                            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <div className="space-y-2 lg:space-y-4">
+                                        <div className="flex items-center gap-2 lg:gap-3 text-emerald-700 text-sm lg:text-base">
+                                            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                 </svg>
                                             </div>
-                                            <span>Real-time messaging with sellers</span>
+                                            <span className="hidden lg:inline">Real-time messaging with sellers</span>
+                                            <span className="lg:hidden">Real-time messaging</span>
                                         </div>
-                                        <div className="flex items-center gap-3 text-emerald-700">
-                                            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <div className="flex items-center gap-2 lg:gap-3 text-emerald-700 text-sm lg:text-base">
+                                            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                 </svg>
                                             </div>
-                                            <span>Share images and voice messages</span>
+                                            <span className="hidden lg:inline">Share images and voice messages</span>
+                                            <span className="lg:hidden">Share media</span>
                                         </div>
-                                        <div className="flex items-center gap-3 text-emerald-700">
-                                            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <div className="flex items-center gap-2 lg:gap-3 text-emerald-700 text-sm lg:text-base">
+                                            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                 </svg>
                                             </div>
-                                            <span>Track order status and updates</span>
+                                            <span className="hidden lg:inline">Track order status and updates</span>
+                                            <span className="lg:hidden">Order tracking</span>
                                         </div>
                                     </div>
                                     
-                                    <div className="mt-8 space-y-3">
+                                    <div className="mt-6 lg:mt-8 space-y-3">
                                         <button
                                             onClick={() => navigate('/login')}
-                                            className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-lime-400 hover:from-emerald-600 hover:to-lime-500 text-white rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105"
+                                            className="w-full px-4 lg:px-6 py-2 lg:py-3 bg-gradient-to-r from-emerald-500 to-lime-400 hover:from-emerald-600 hover:to-lime-500 text-white rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 text-sm lg:text-base"
                                         >
                                             Login to Start Chatting
                                         </button>
-                                        <p className="text-sm text-emerald-600">
+                                        <p className="text-xs lg:text-sm text-emerald-600">
                                             Don't have an account?{' '}
                                             <button
                                                 onClick={() => navigate('/register')}

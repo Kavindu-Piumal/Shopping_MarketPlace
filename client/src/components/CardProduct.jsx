@@ -27,8 +27,11 @@ const CardProduct = ({ data }) => {
   const handleProductClick = () => {
     // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Navigate to product page
-    navigate(url);
+    
+    // Small delay to ensure smooth scroll starts before navigation
+    setTimeout(() => {
+      navigate(url);
+    }, 100);
   };
 
   // Handle keyboard navigation
@@ -67,34 +70,42 @@ const CardProduct = ({ data }) => {
 
   return (
     <div
-      onClick={handleProductClick}
-      onKeyDown={handleKeyPress}
-      tabIndex={0}
-      role="button"
-      aria-label={`View details for ${data.name}`}
-      className="card w-36 lg:w-52 min-w-36 lg:min-w-52 bg-white rounded-eco p-4 shadow-eco border border-emerald-50 group relative overflow-hidden hover:shadow-lg transition-shadow flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-    >      {/* Eco Badge */}
-      {data.discount > 0 && (
-        <div className="absolute top-2 left-2 z-10">
+      className="card w-full bg-white rounded-eco p-2 sm:p-4 shadow-eco border border-emerald-50 group relative overflow-hidden hover:shadow-lg transition-shadow flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 touch-manipulation"
+    >
+      {/* Eco Badge - Always reserve space for consistent layout */}
+      <div className="absolute top-2 left-2 z-10 min-h-[24px]">
+        {data.discount > 0 ? (
           <div className="eco-badge">♻️ {data.discount}% OFF</div>
-        </div>
-      )}
-      <div className="bg-emerald-50 min-h-20 w-full rounded-xl flex items-center justify-center mb-2">
+        ) : (
+          <div className="eco-badge opacity-0">♻️ 0% OFF</div>
+        )}
+      </div>
+      
+      {/* Product Image with Centered Add-to-Cart Controls */}
+      <div 
+        onClick={handleProductClick}
+        onKeyDown={handleKeyPress}
+        tabIndex={0}
+        role="button"
+        aria-label={`View details for ${data.name}`}
+        className="bg-emerald-50 h-20 sm:h-28 lg:h-32 w-full rounded-xl flex items-center justify-center mb-0 sm:mb-2 relative group"
+      >
         <img
           src={data.image && data.image[0] ? data.image[0] : '/placeholder.jpg'}
-          className="w-full h-28 object-contain group-hover:scale-105 transition-transform duration-200"
+          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
           alt={data.name || 'Product'}
         />
       </div>
-      <div className="mt-2 w-full flex-1 flex flex-col">
-        <div className="w-full text-ellipsis line-clamp-2 py-1 font-semibold text-emerald-800">
+      
+      <div className="mt-0 sm:mt-2 w-full flex-1 flex flex-col space-y-0 sm:space-y-1">
+        <div className="w-full text-ellipsis line-clamp-2 font-semibold text-emerald-800 text-xs sm:text-sm lg:text-base leading-tight">
           {data.name}
-        </div>        <div className="w-full text-xs lg:text-sm line-clamp-1 text-emerald-600 mb-1">
+        </div>        <div className="w-full text-xs line-clamp-1 text-emerald-600">
           {data.unit}
         </div>
         
         {/* Review Rating Display - Always reserve space for consistent card heights */}
-        <div className="flex items-center gap-1 mb-2 min-h-[16px]">
+        <div className="flex items-center gap-1 min-h-[16px]">
           {reviewStats && reviewStats.totalReviews > 0 ? (
             <>
               <StarRating rating={reviewStats.averageRating} size="text-xs" />
@@ -104,11 +115,11 @@ const CardProduct = ({ data }) => {
             </>
           ) : (
             /* Empty space to maintain consistent height */
-            <div className="h-4"></div>
+            <div className="h-3 sm:h-4"></div>
           )}
         </div>
         
-        <div className="flex items-center gap-2 text-base mb-2">
+        <div className="flex items-center justify-between gap-1 text-xs sm:text-sm lg:text-base">
           <span className="font-bold text-emerald-700">
             {DisplayPriceInRupees(PriceWithDiscount(data.price, data.discount))}
           </span>
@@ -118,15 +129,24 @@ const CardProduct = ({ data }) => {
             </span>
           )}
         </div>
-        <div className="mt-auto pt-2">
+        
+        {/* Add-to-cart controls centered below price - only on desktop */}
+        <div className="hidden sm:flex justify-center mt-2">
           {data.stock == 0 ? (
-            <div className="text-red-500 text-center bg-red-50 py-2 rounded-lg font-medium text-xs">
+            <div className="text-red-500 text-center bg-red-50 py-1 px-3 rounded-lg font-medium text-xs">
               ❌ Out Of Stock
             </div>
           ) : (
             <AddtoCartButton data={data} />
           )}
         </div>
+        
+        {/* Out of Stock Message */}
+        {data.stock == 0 && (
+          <div className="text-red-500 text-center bg-red-50 py-2 rounded-lg font-medium text-xs">
+            ❌ Out Of Stock
+          </div>
+        )}
       </div>
     </div>
   );

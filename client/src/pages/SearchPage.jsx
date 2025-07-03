@@ -75,7 +75,7 @@ const SearchPage = () => {
           hasMore={page < totalPage} // Only true if more pages are available
           next={fetchMoreData}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 py-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 py-5 gap-2 sm:gap-3 lg:gap-4">
             {data.map((item, index) => {
               return <CardProduct data={item} key={"searchproduct" + index} />;
             })}

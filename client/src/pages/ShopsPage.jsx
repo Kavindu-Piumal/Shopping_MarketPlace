@@ -153,19 +153,37 @@ const ShopsPage = () => {
     return (      <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
         {/* Shop Header */}
         <div className="relative">
-          <div className="h-32 bg-gradient-to-r from-emerald-400 to-green-500 rounded-t-xl relative overflow-hidden">
+          <div className="h-32 relative overflow-hidden rounded-t-xl" style={{ backgroundColor: '#10b981' }}>
             {/* Shop Banner Background */}
             {shop.banner && (
               <img 
                 src={shop.banner} 
                 alt="Shop Banner" 
-                className="absolute inset-0 w-full h-full object-cover"
+                style={{ 
+                  position: 'absolute',
+                  top: '0px',
+                  left: '0px',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  zIndex: '1',
+                  display: 'block',
+                  opacity: '1'
+                }}
               />
             )}
-            {/* Overlay for better text readability */}
-            <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+            {/* Light overlay for better text readability */}
+            <div style={{ 
+              position: 'absolute',
+              top: '0',
+              left: '0',
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0,0,0,0.2)',
+              zIndex: '2'
+            }}></div>
           </div>
-          <div className="absolute -bottom-6 left-6">
+          <div className="absolute -bottom-6 left-6" style={{ zIndex: '10' }}>
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
               {shop.logo ? (
                 <img 
@@ -177,7 +195,7 @@ const ShopsPage = () => {
                 <FaStore className="text-emerald-600 text-xl" />
               )}
             </div>
-          </div><div className="absolute top-4 right-4 flex flex-col gap-1 items-end">
+          </div><div className="absolute top-4 right-4 flex flex-col gap-1 items-end" style={{ zIndex: '10' }}>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
               isOpen() 
                 ? 'bg-green-100 text-green-800' 
@@ -287,40 +305,77 @@ const ShopsPage = () => {
               Browse Sustainable Shops
               <FaLeaf className="text-green-500" />
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover eco-friendly shops offering reused, recycled, and sustainable products from local sellers
-            </p>
-          </div>          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-            {[
-              { name: "Electronics & Tech", icon: "📱", color: "from-blue-400 to-blue-600" },
-              { name: "Clothing & Fashion", icon: "👕", color: "from-pink-400 to-pink-600" },
-              { name: "Home & Garden", icon: "🏡", color: "from-green-400 to-green-600" },
-              { name: "Automotive Parts", icon: "🚗", color: "from-red-400 to-red-600" },
-              { name: "Books & Media", icon: "📚", color: "from-indigo-400 to-indigo-600" },
-              { name: "Sports & Recreation", icon: "⚽", color: "from-orange-400 to-orange-600" },
-              { name: "Health & Beauty", icon: "💄", color: "from-purple-400 to-purple-600" },
-              { name: "Tools & Hardware", icon: "🔧", color: "from-gray-400 to-gray-600" }
-            ].map((shopCategory, index) => (
-              <Link
-                key={index}
-                to={`/shops?category=${encodeURIComponent(shopCategory.name)}`}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-emerald-300 transform hover:-translate-y-1 overflow-hidden"
-              >
-                <div className={`h-20 bg-gradient-to-br ${shopCategory.color} flex items-center justify-center`}>
-                  <span className="text-3xl">{shopCategory.icon}</span>
-                </div>
-                <div className="p-3">
-                  <h3 className="text-xs font-semibold text-gray-800 text-center group-hover:text-emerald-600 transition-colors leading-tight">
-                    {shopCategory.name}
-                  </h3>
-                </div>
-              </Link>
-            ))}          </div>
+            
+          </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-8">
+          {/* Mobile Layout - Compact vertical stack */}
+          <div className="md:hidden space-y-3">
+            {/* Search */}
+            <form onSubmit={handleSearchSubmit}>
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search shops..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                />
+              </div>
+            </form>
+
+            {/* Category and Sort in a row on mobile */}
+            <div className="grid grid-cols-2 gap-3">
+              <select
+                value={filters.category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+              >
+                <option value="all">All Categories</option>
+                {shopCategories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+
+              <select
+                value={`${filters.sortBy}-${filters.sortOrder}`}
+                onChange={(e) => {
+                  const [sortBy, sortOrder] = e.target.value.split('-');
+                  handleFilterChange('sortBy', sortBy);
+                  handleFilterChange('sortOrder', sortOrder);
+                }}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+              >
+                <option value="createdAt-desc">Newest</option>
+                <option value="createdAt-asc">Oldest</option>
+                <option value="rating-desc">Top Rated</option>
+                <option value="totalProducts-desc">Most Products</option>
+                <option value="name-asc">A-Z</option>
+                <option value="name-desc">Z-A</option>
+              </select>
+            </div>
+
+            {/* Admin status filter on mobile (full width if present) */}
+            {user && user.role === 'admin' && (
+              <select
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                value={filters.status || 'all'}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+              >
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="pending">Pending</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            )}
+          </div>
+
+          {/* Desktop Layout - Horizontal grid */}
+          <div className="hidden md:grid md:grid-cols-4 gap-4">
             {/* Search */}
             <form onSubmit={handleSearchSubmit} className="md:col-span-2">
               <div className="relative">
@@ -398,92 +453,7 @@ const ShopsPage = () => {
               {filters.search && ` matching "${filters.search}"`}
             </p>
           </div>
-          
-          {/* Debug button - Only visible in development */}
-          {process.env.NODE_ENV !== 'production' && (
-            <button 
-              onClick={() => console.log("Current shops:", shops)}
-              className="px-3 py-1 bg-gray-200 rounded text-xs text-gray-700"
-            >
-              Debug Shops Data
-            </button>
-          )}
-        </div>        {/* Debug Panel - Admin Only */}
-        {user?.role === 'admin' && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <h3 className="text-lg font-semibold text-red-800 mb-3">🔧 Admin Debug Panel</h3>
-            <div className="flex flex-wrap gap-2">
-              <button 
-                onClick={() => console.log("Current shops:", shops)}
-                className="px-3 py-1 bg-blue-500 text-white rounded text-xs"
-              >
-                Log Shops Data
-              </button>
-              
-              <button 
-                onClick={async () => {
-                  try {
-                    const response = await Axios({
-                      url: summaryApi.testGetAllShops.url,
-                      method: summaryApi.testGetAllShops.method
-                    });
-                    console.log("Test API response:", response.data);
-                    showSuccess(`Found ${response.data.count} shops in database`);
-                  } catch (error) {
-                    console.error("Error fetching test shops:", error);
-                    axiosNotificationError(error);
-                  }
-                }}
-                className="px-3 py-1 bg-green-500 text-white rounded text-xs"
-              >
-                Check All Shops
-              </button>
-              
-              <button 
-                onClick={async () => {
-                  try {
-                    const response = await Axios({
-                      url: summaryApi.debugShops.url,
-                      method: summaryApi.debugShops.method
-                    });
-                    console.log("Debug shops response:", response.data);
-                    const { totalShops, statusCounts } = response.data;
-                    showSuccess(`Found ${totalShops} shops (${statusCounts.active} active, ${statusCounts.pending} pending)`);
-                  } catch (error) {
-                    console.error("Error fetching debug shops:", error);
-                    axiosNotificationError(error);
-                  }
-                }}
-                className="px-3 py-1 bg-purple-500 text-white rounded text-xs"
-              >
-                Debug Shop Status
-              </button>
-              
-              <button 
-                onClick={async () => {
-                  if (!window.confirm("This will set ALL shops to active status. Continue?")) {
-                    return;
-                  }
-                  try {
-                    const response = await Axios({
-                      url: summaryApi.debugActivateAllShops.url,
-                      method: summaryApi.debugActivateAllShops.method
-                    });
-                    console.log("Activate shops response:", response.data);
-                    showSuccess(`${response.data.modifiedCount} shops activated. Refreshing...`);
-                    setTimeout(() => fetchShops(), 1000);
-                  } catch (error) {
-                    console.error("Error activating shops:", error);
-                    axiosNotificationError(error);
-                  }
-                }}
-                className="px-3 py-1 bg-red-500 text-white rounded text-xs"
-              >
-                Activate All Shops
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
         
         {/* Loading */}
         {loading && (
@@ -496,7 +466,7 @@ const ShopsPage = () => {
         {!loading && (
           <>
             {shops.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-4">
                 {shops.map(shop => (
                   <ShopCard key={shop._id} shop={shop} />
                 ))}
@@ -518,7 +488,7 @@ const ShopsPage = () => {
 
         {/* Pagination */}
         {!loading && pagination.totalPages > 1 && (
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-2 mt-2 pb-2">
             <button
               disabled={!pagination.hasPrevPage}
               onClick={() => handlePageChange(filters.page - 1)}

@@ -1,5 +1,5 @@
 import React, { use } from "react";
-import maxresdefault from "../assets/maxresdefault.jpg";
+import abcdef from "../assets/abcdef.jpg";
 import download from "../assets/download.png";
 import { useSelector } from "react-redux";
 import validUrl from "../utils/validUrl";
@@ -50,12 +50,12 @@ const Home = () => {
         {/* Hero Banner with eco-friendly overlay */}
         <div
           className={`w-full h-full min-h-48 rounded-2xl relative overflow-hidden shadow-lg ${
-            !maxresdefault && "animate-pulse"
+            !abcdef && "animate-pulse"
           }`}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-green-900/20 to-emerald-800/20 z-10"></div>
           <img
-            src={maxresdefault}
+            src={abcdef}
             alt="Sustainable Shopping - Reused & Recycled Products"
             className="w-full h-50 object-cover rounded-2xl hidden lg:block"
           />
@@ -88,7 +88,7 @@ const Home = () => {
             <p className="text-gray-600">Browse our sustainable product categories</p>
           </div>
           
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+          <div className="hidden lg:grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
             {loadingCategory
               ? new Array(12).fill(0).map((c, index) => {
                   return (
@@ -134,18 +134,76 @@ const Home = () => {
                     </div>
                   );
                 })}
-          </div>        </div>{/* */}
-        {categoryData
-          .filter(c => c && c._id && c.name) // Filter out null/invalid categories
-          .map((c, index) => {
-            return (
-              <CategorywiseproductDisplay
-                key={c?._id + "Category Wised"}
-                id={c?._id}
-                name={c?.name}
-              />
-            );
-          })}
+          </div>
+
+          {/* Mobile horizontal scrollable categories */}
+          <div className="lg:hidden mobile-category-scroll overflow-x-auto overflow-y-hidden flex gap-4 pb-2 px-2 scrollbar-none scroll-smooth">
+            {loadingCategory
+              ? new Array(12).fill(0).map((c, index) => {
+                  return (
+                    <div key={index} className="bg-white p-3 min-h-32 min-w-20 max-w-20 flex-shrink-0 grid gap-2 rounded-2xl shadow-lg animate-pulse border border-green-100">
+                      <div className="bg-gradient-to-br from-green-200 to-emerald-200 min-h-16 rounded-xl"></div>
+                      <div className="bg-gradient-to-r from-green-200 to-emerald-200 h-4 rounded-lg"></div>
+                    </div>
+                  );
+                })
+              : categoryData.map((category, index) => {
+                  // Add null check for category
+                  if (!category || !category._id || !category.name) {
+                    return null;
+                  }
+                  return (
+                    <div
+                      key={category._id + "mobile" || index}
+                      className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-green-100 hover:border-green-300 transform hover:-translate-y-1 min-w-20 max-w-20 flex-shrink-0"
+                      onClick={() => {
+                        console.log(
+                          "category._id",
+                          category._id,
+                          "category.name",
+                          category.name
+                        );
+                        handleRedirectproductList(category._id, category.name);
+                      }}
+                    >
+                      <div className="p-3">
+                        <div className="relative overflow-hidden rounded-xl mb-2">
+                          <img
+                            src={category.image}
+                            alt={category.name}
+                            className="w-full h-16 object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="absolute top-1 right-1">
+                            <FaLeaf className="text-green-500 text-xs" />
+                          </div>
+                        </div>
+                        <h3 className="text-xs font-semibold text-gray-800 text-center group-hover:text-green-600 transition-colors leading-tight">
+                          {category.name}
+                        </h3>
+                      </div>
+                    </div>
+                  );
+                })}
+          </div>        </div>
+
+        {/* Product Categories Sections with proper spacing - Updated: Cache Clear */}
+        <div className="category-sections-container">
+          {categoryData
+            .filter(c => c && c._id && c.name) // Filter out null/invalid categories
+            .map((c, index) => {
+              return (
+                <div 
+                  key={c?._id + "Category Wised"} 
+                  className="category-section-wrapper"
+                >
+                  <CategorywiseproductDisplay
+                    id={c?._id}
+                    name={c?.name}
+                  />
+                </div>
+              );
+            })}
+        </div>
       </div>
     </section>
   );

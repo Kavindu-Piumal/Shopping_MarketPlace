@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import UploadImages from "../utils/UploadImage";
 import summaryApi from "../common/summaryApi";
@@ -7,7 +7,7 @@ import { useNotification } from "../context/NotificationContext";
 import axiosNotificationError from "../utils/AxiosNotificationError";
 import Loading from "./Loading";
 
-const uploadCategory = ({ close, fetchData }) => {
+const UploadCategory = ({ close, fetchData }) => {
   const { showSuccess } = useNotification();
   const [data, setData] = useState({
     name: "",
@@ -16,6 +16,23 @@ const uploadCategory = ({ close, fetchData }) => {
 
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === 'Escape') {
+        close();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [close]);
 
   const handleOnChange = (e) => {
     const { name, value } = e.target;
@@ -37,7 +54,8 @@ const uploadCategory = ({ close, fetchData }) => {
         method: summaryApi.addCategory.method,
         data: data,
       });
-      const { data: responseData } = response;      if (responseData.success) {
+      const { data: responseData } = response;      
+      if (responseData.success) {
         showSuccess(responseData.message);
         close();
         fetchData();
@@ -69,8 +87,18 @@ const uploadCategory = ({ close, fetchData }) => {
     }
   };
   return (
-    <section className="fixed top-0 bottom-0 left-0 right-0 p-4 bg-neutral-800 bg-opacity-60 flex items-center justify-center z-[60]">
-      <div className="bg-white max-w-4xl w-full p-4 rounded shadow-2xl">
+    <section 
+      className="fixed top-0 bottom-0 left-0 right-0 p-4 bg-neutral-800 bg opacity-90 flex items-center justify-center z-[60]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          close();
+        }
+      }}
+    >
+      <div 
+        className="bg-white max-w-4xl w-full p-4 rounded shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Add Category</h2>
           <button onClick={close} className="w-fit block ml-auto hover:bg-red-500 hover:text-white p-1 rounded">
@@ -127,10 +155,7 @@ const uploadCategory = ({ close, fetchData }) => {
           </div>
 
           <button
-            className={`
-            ${data.name && data.image ? "bg-green-500" : "bg-red-600"}
-            px-4 py-2 rounded text-white font-semibold mt-3
-            `}
+            className={`${data.name && data.image ? "bg-green-500" : "bg-red-600"} px-4 py-2 rounded text-white font-semibold mt-3`}
           >
             Add Category
           </button>
@@ -140,4 +165,4 @@ const uploadCategory = ({ close, fetchData }) => {
   );
 };
 
-export default uploadCategory;
+export default UploadCategory;

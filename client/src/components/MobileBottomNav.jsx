@@ -12,7 +12,7 @@ const MobileBottomNav = () => {
   const { totalQty } = useGlobalcontext();
 
   // Don't show on certain pages
-  const hiddenRoutes = ['/checkout', '/login', '/register'];
+  const hiddenRoutes = ['/checkout', '/register']; // Removed '/login' so bottom nav shows on login page
   if (hiddenRoutes.includes(location.pathname)) {
     return null;
   }

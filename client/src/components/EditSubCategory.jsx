@@ -1,4 +1,4 @@
-import React, { use } from "react";
+import React, { use, useEffect } from "react";
 import { useState } from "react";
 import { IoClose } from "react-icons/io5";
 import UploadImages from "../utils/UploadImage";
@@ -22,6 +22,23 @@ const EditSubCategory = ({ close ,data,fetchdata}) => {
   const user = useSelector((state) => state.user);
 
   const isOwner = user.role === "admin" || data.createdBy === user._id;
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === 'Escape') {
+        close();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [close]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,8 +115,18 @@ const EditSubCategory = ({ close ,data,fetchdata}) => {
   }
 
   return (
-    <section className="fixed top-0 right-0 bottom-0 left-0 bg-black bg opacity-80 flex items-center justify-center z-50">
-      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-2xl border border-green-300 relative animate-fadeIn">
+    <section 
+      className="fixed top-0 right-0 bottom-0 left-0 bg-neutral-800 bg opacity-90 flex items-center justify-center z-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          close();
+        }
+      }}
+    >
+      <div 
+        className="w-full max-w-md bg-white p-6 rounded-lg shadow-2xl border border-green-300 relative animate-fadeIn"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b pb-2 mb-4">
           <h1 className="text-xl font-bold text-green-700">Edit Sub Category</h1>
           <button

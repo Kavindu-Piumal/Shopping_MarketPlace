@@ -8,6 +8,7 @@ import Loading from "../components/Loading";
 import ProductCardAdmin from "../components/ProductCardAdmin";
 import { IoSearch } from "react-icons/io5";
 import { useSelector } from "react-redux";
+import DashboardMobileLayout from "../components/DashboardMobileLayout";
 
 const ProductAdmin = () => {
   const { axiosNotificationError } = useNotification();
@@ -94,8 +95,10 @@ const ProductAdmin = () => {
   }, [search, user]);
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-100 to-lime-50 py-6 px-2">
-      <div className="max-w-7xl mx-auto">
+    <DashboardMobileLayout>
+      <section className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-100 to-lime-50 py-6 px-2">
+        {/* Removed MobileBackButton to avoid duplicate back buttons */}
+        <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white/90 rounded-lg shadow-lg px-6 py-4 mb-6 border border-emerald-100">
           <h2 className="text-2xl font-bold text-emerald-800 tracking-tight flex items-center gap-2">
             <span className="inline-block w-2 h-6 bg-emerald-400 rounded-full mr-2"></span>
@@ -116,7 +119,7 @@ const ProductAdmin = () => {
         {loading && <Loading />}
 
         <div className="min-h-[60vh]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
             {productData.map((p, index) => (
               <ProductCardAdmin
                 key={p._id || index}
@@ -146,6 +149,7 @@ const ProductAdmin = () => {
         </div>
       </div>
     </section>
+    </DashboardMobileLayout>
   );
 };
 

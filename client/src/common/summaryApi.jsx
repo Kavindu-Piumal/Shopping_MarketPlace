@@ -110,6 +110,10 @@ const summaryApi = {
         url: `${baseURL}/api/product/search-product`, // Use full URL
         method: "post"
     },
+    getHotDeals:{
+        url: `${baseURL}/api/product/hot-deals`, // Use full URL
+        method: "post"
+    },
     addToCart: {
         url: `${baseURL}/api/cart/create`, // Use full URL
         method: "post"
@@ -234,31 +238,6 @@ const summaryApi = {
         url: `${baseURL}/api/review/delete`,
         method: "delete"
     },
-    // Shop Review APIs
-    addShopReview: {
-        url: `${baseURL}/api/shop-review/add`,
-        method: "post"
-    },
-    getShopReviews: {
-        url: `${baseURL}/api/shop-review/shop`,
-        method: "get"
-    },
-    canUserReviewShop: {
-        url: `${baseURL}/api/shop-review/can-review`,
-        method: "get"
-    },
-    updateShopReview: {
-        url: `${baseURL}/api/shop-review/update`,
-        method: "put"
-    },
-    deleteShopReview: {
-        url: `${baseURL}/api/shop-review/delete`,
-        method: "delete"
-    },
-    getShopReviewStats: {
-        url: `${baseURL}/api/shop-review/stats`,
-        method: "get"
-    },
     // Shop APIs
     createShop: {
         url: `${baseURL}/api/shop/create`,
@@ -332,12 +311,20 @@ const summaryApi = {
         method: "get"
     },
     markNotificationAsRead: {
-        url: `${baseURL}/api/notifications/:id/read`,
+        url: `${baseURL}/api/notifications/:notificationId/read`,
         method: "patch"
     },
     markAllNotificationsAsRead: {
         url: `${baseURL}/api/notifications/mark-all-read`,
         method: "patch"
+    },
+    deleteAllNotifications: {
+        url: `${baseURL}/api/notifications/clear-all`,
+        method: "delete"
+    },
+    deleteNotification: {
+        url: `${baseURL}/api/notifications/:notificationId`,
+        method: "delete"
     }
 }
 

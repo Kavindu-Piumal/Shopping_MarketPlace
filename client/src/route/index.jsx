@@ -23,7 +23,7 @@ import ProductList from "../pages/ProductList";
 import ProductDisplayPage from "../pages/ProductDisplayPage";
 import CartMobile from "../pages/CartMobile";
 import CheckoutPage from "../pages/CheckoutPage";
-import OrderSuccessContactShop from "../pages/OrderSuccessContactShop.JSX";
+import OrderSuccessContactShop from "../pages/OrderSuccessContactShop";
 import Cancel from "../pages/Cancel";
 import ChatPage from "../pages/ChatPage";
 import AdminChatHistory from "../components/AdminChatHistory";
@@ -143,7 +143,7 @@ const router = createBrowserRouter([
         path: "checkout",
         element: <CheckoutPage/>
       },      {
-        path: "/OrderSuccessContactShop",
+        path: "OrderSuccessContactShop",
         element:<OrderSuccessContactShop/>
       },
       {

@@ -2,16 +2,19 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import NoDta from "../components/NoDta";
+import DashboardMobileLayout from "../components/DashboardMobileLayout";
 
 const MyOrders = () => {
   const orders = useSelector((state) => state.orders.order);
   console.log("order", orders);
   return (
-    <section className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-100 to-lime-50 py-6 px-2">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white/90 p-6 rounded-xl shadow-lg mb-6 border border-emerald-100 flex items-center gap-3">
+    <DashboardMobileLayout>
+      <section className="bg-gradient-to-br from-green-50 via-emerald-100 to-lime-50 py-4 px-2">
+        <div className="max-w-4xl mx-auto">
+        {/* Header with better spacing since no search bar */}
+        <div className="bg-white/90 p-4 md:p-6 rounded-xl shadow-lg mb-4 border border-emerald-100 flex items-center gap-3">
           <svg
-            className="w-8 h-8 text-emerald-400"
+            className="w-8 h-8 text-emerald-400 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -23,9 +26,14 @@ const MyOrders = () => {
               d="M3 7h18M3 12h18M3 17h18"
             />
           </svg>
-          <h1 className="text-2xl font-bold text-emerald-800 tracking-tight">
-            Order Details
-          </h1>
+          <div className="flex-1">
+            <h1 className="text-xl md:text-2xl font-bold text-emerald-800 tracking-tight">
+              My Orders
+            </h1>
+            <p className="text-sm text-emerald-600 mt-1">
+              Track and manage your orders
+            </p>
+          </div>
         </div>
         {!orders[0] && <NoDta />}
         <div className="space-y-6">
@@ -61,6 +69,7 @@ const MyOrders = () => {
         </div>
       </div>
     </section>
+    </DashboardMobileLayout>
   );
 };
 

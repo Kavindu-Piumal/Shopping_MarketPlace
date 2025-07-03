@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -17,11 +17,63 @@ import { NotificationProvider, useNotification } from './context/NotificationCon
 import NotificationContainer from './components/NotificationContainer';
 import { ModalProvider } from './context/ModalContext';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
+import useMobile from './hooks/useMobile';
 
 function App() {
   const dispatch = useDispatch();
   const location = useLocation();
   const { checkAuth } = useAuthContext();
+  const [isMobile] = useMobile();
+
+  // 🎯 SMART: Determine if search bar should be visible based on current route
+  const shouldShowSearch = useMemo(() => {
+    const path = location.pathname;
+    
+    // Show search on product-related pages
+    const productPages = [
+      '/',                    // Home page
+      '/search',              // Search page
+      '/category',            // Category pages
+      '/subcategory',         // Subcategory pages
+      '/product',             // Product pages
+      '/shops',              // Shops page
+      '/hot-deals',          // Hot deals page
+    ];
+    
+    // Hide search on user account/dashboard pages
+    const dashboardPages = [
+      '/user-menu-mobile',    // Mobile user menu
+      '/dashboard',           // Dashboard pages
+      '/chat',               // Chat page
+      '/checkout',           // Checkout
+      '/cart',               // Cart page
+      '/login',              // Auth pages
+      '/register',
+      '/forgot-password',
+      '/reset-password',
+      '/otp-verification',
+    ];
+    
+    // Check if current path starts with any dashboard page
+    const isDashboardPage = dashboardPages.some(page => path.startsWith(page));
+    
+    // Check if current path starts with any product page or contains product-related segments
+    const isProductPage = productPages.some(page => path.startsWith(page)) || 
+                         path.includes('/category/') || 
+                         path.includes('/subcategory/') ||
+                         path.includes('/product/') ||
+                         path.includes('/shop/');
+    
+    return isProductPage && !isDashboardPage;
+  }, [location.pathname]);
+
+  // Dynamic padding: add extra padding when mobile search is visible
+  const mainPadding = useMemo(() => {
+    if (shouldShowSearch && isMobile) {
+      return 'pt-32'; // 128px: 80px (header) + 48px (mobile search)
+    }
+    return 'pt-20'; // 80px: just header
+  }, [shouldShowSearch, isMobile]);
 
   // 🎯 ENTERPRISE: Initialize authentication state on app startup
   useEffect(() => {
@@ -111,7 +163,7 @@ function App() {
     <GlobalProvider>
       <SocketProvider>
         <Header/>
-        <main className='min-h-[77vh]'>   
+        <main className={`min-h-[77vh] ${mainPadding}`}>   
           <Outlet/>
         </main>   
         <Footer/>

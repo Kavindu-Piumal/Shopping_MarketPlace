@@ -4,6 +4,7 @@ import Axios from '../utils/Axios';
 import summaryApi from '../common/summaryApi';
 import { DisplayPriceInRupees } from '../utils/displaypriceinrupees';
 import { useNotification } from '../context/NotificationContext';
+import DashboardMobileLayout from '../components/DashboardMobileLayout';
 
 const SellerOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -111,11 +112,12 @@ const SellerOrders = () => {
     }
 
     return (
-        <div className="bg-white">
-            <div className="container mx-auto p-4">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-emerald-800">My Orders</h2>
-                    <div className="text-sm text-gray-600">
+        <DashboardMobileLayout>
+            <div className="min-h-screen bg-gray-50">
+                <div className="container mx-auto p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-emerald-800">My Orders</h2>
+                    <div className="text-sm text-gray-600 bg-white px-3 py-1 rounded-lg">
                         Total Orders: {orders.length}
                     </div>
                 </div>
@@ -129,18 +131,18 @@ const SellerOrders = () => {
                 ) : (
                     <div className="grid gap-4">
                         {orders.map((order) => (
-                            <div key={order._id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            <div key={order._id} className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow">
+                                <div className="flex flex-col gap-4">
                                     {/* Order Info */}
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-3">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
                                             <h3 className="font-semibold text-lg">Order #{order.orderId}</h3>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(order.order_status)}`}>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium self-start ${getStatusBadgeColor(order.order_status)}`}>
                                                 {getStatusEmoji(order.order_status)} {order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1)}
                                             </span>
                                         </div>
                                         
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                             <div>
                                                 <p className="text-sm text-gray-600">Product</p>
                                                 <p className="font-medium">{order.productId?.name}</p>
@@ -172,7 +174,7 @@ const SellerOrders = () => {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex flex-col gap-2 min-w-[200px]">
+                                    <div className="flex flex-col gap-2 w-full">
                                         {/* Chat Button */}
                                         <a
                                             href={getChatLink(order)}
@@ -228,8 +230,9 @@ const SellerOrders = () => {
                         ))}
                     </div>
                 )}
+                </div>
             </div>
-        </div>
+        </DashboardMobileLayout>
     );
 };
 

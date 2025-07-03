@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Cache Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+            text-align: center;
+        }
+        .cache-indicator {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .test-button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .test-button:hover {
+            background: #047857;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSS Cache Test - v2</h1>
+    <div class="cache-indicator">
+        ✅ CSS CACHE IS WORKING - v2
+    </div>
+    
+    <p>If you can see this green box with "v2", then the CSS cache has been cleared successfully.</p>
+    
+    <div>
+        <button class="test-button">Normal Button</button>
+        <div style="display: inline-flex; border: 2px solid #059669; border-radius: 8px; overflow: hidden; margin: 10px;">
+            <button style="background: #059669; color: white; border: none; padding: 8px 12px;">-</button>
+            <div style="background: white; color: #1f2937; padding: 8px 12px; font-weight: bold;">2</div>
+            <button style="background: #059669; color: white; border: none; padding: 8px 12px;">+</button>
+        </div>
+    </div>
+    
+    <p><strong>To clear browser cache:</strong></p>
+    <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+        <li><strong>Chrome/Edge:</strong> Ctrl+Shift+R or Ctrl+F5</li>
+        <li><strong>Firefox:</strong> Ctrl+Shift+R or Ctrl+F5</li>
+        <li><strong>Safari:</strong> Cmd+Shift+R</li>
+        <li><strong>Mobile:</strong> Clear browser cache in settings</li>
+    </ul>
+    
+    <p><a href="/">← Back to Home</a></p>
+    
+    <script>
+        // Force reload without cache
+        if (performance.navigation.type !== 1) {
+            setTimeout(() => {
+                location.reload(true);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duplicate Click Prevention - Add to Cart Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #dc2626;
+            border-radius: 10px;
+            background: #fef2f2;
+        }
+        .fix-section {
+            border-color: #059669;
+            background: #f0f9ff;
+        }
+        h2 {
+            color: #dc2626;
+            margin-bottom: 15px;
+        }
+        .fix-section h2 {
+            color: #059669;
+        }
+        .issue {
+            background: #fee2e2;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+        }
+        .fix {
+            background: #dcfce7;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #059669;
+        }
+        .link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #059669;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px 5px 5px 0;
+        }
+        .code {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="text-align: center; color: #dc2626;">🔧 Duplicate Click Prevention Fix</h1>
+        
+        <div class="test-section">
+            <h2>🐛 BUG IDENTIFIED</h2>
+            <p><strong>Issue:</strong> Users could rapidly click + or - buttons, causing multiple API calls and duplicate success messages.</p>
+            
+            <div class="issue">
+                <strong>Problem Scenarios:</strong>
+                <ul>
+                    <li>Rapidly clicking + button → Multiple "quantity updated" messages</li>
+                    <li>Rapidly clicking - button → Multiple "item removed" messages</li>
+                    <li>API calls race condition → Inconsistent cart state</li>
+                    <li>Poor user experience with notification spam</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section fix-section">
+            <h2>✅ COMPREHENSIVE FIX APPLIED</h2>
+            <p><strong>Solution:</strong> Implemented multiple layers of protection against duplicate clicks.</p>
+            
+            <div class="fix">
+                <strong>1. Loading States Added:</strong>
+                <ul>
+                    <li><code>increaseLoading</code> - Prevents multiple + clicks</li>
+                    <li><code>decreaseLoading</code> - Prevents multiple - clicks</li>
+                    <li>Cross-protection - Disable both buttons when either is loading</li>
+                </ul>
+            </div>
+            
+            <div class="fix">
+                <strong>2. Visual Feedback:</strong>
+                <ul>
+                    <li>Buttons turn gray when disabled</li>
+                    <li>Cursor changes to "not-allowed"</li>
+                    <li>Clear indication that action is processing</li>
+                </ul>
+            </div>
+            
+            <div class="fix">
+                <strong>3. Debounce Protection:</strong>
+                <ul>
+                    <li>500ms minimum interval between clicks</li>
+                    <li>Prevents accidental rapid clicking</li>
+                    <li>Timestamp tracking for last action</li>
+                </ul>
+            </div>
+            
+            <div class="fix">
+                <strong>4. Error Handling:</strong>
+                <ul>
+                    <li>Proper try-catch blocks</li>
+                    <li>Loading state cleanup in finally block</li>
+                    <li>Error notifications for failed requests</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section fix-section">
+            <h2>🧪 Test the Fix</h2>
+            <p>Follow these steps to verify duplicate click prevention:</p>
+            
+            <div class="fix">
+                <strong>Step 1:</strong> <a href="http://localhost:5173" class="link">Open Home Page</a>
+            </div>
+            <div class="fix">
+                <strong>Step 2:</strong> Add any product to cart (desktop or mobile)
+            </div>
+            <div class="fix">
+                <strong>Step 3:</strong> Try rapidly clicking the + button multiple times
+            </div>
+            <div class="fix">
+                <strong>Step 4:</strong> Try rapidly clicking the - button multiple times
+            </div>
+            <div class="fix">
+                <strong>Expected:</strong> Only one success message per actual click
+            </div>
+        </div>
+
+        <div class="test-section fix-section">
+            <h2>⚡ Performance Improvements</h2>
+            <div class="code">
+                // Before: No protection
+                const increaseqty = async (e) => {
+                  const response = await UpdateCartItem(id, qty + 1);
+                  showSuccess("Updated"); // Could show multiple times
+                }
+                
+                // After: Full protection
+                const increaseqty = async (e) => {
+                  if (increaseLoading || (now - lastActionTime < 500)) return;
+                  setIncreaseLoading(true);
+                  try {
+                    const response = await UpdateCartItem(id, qty + 1);
+                    showSuccess("Updated"); // Shows only once
+                  } finally {
+                    setIncreaseLoading(false);
+                  }
+                }
+            </div>
+        </div>
+
+        <div class="test-section fix-section">
+            <h2>🎯 Expected Behavior</h2>
+            <ul>
+                <li>✅ <strong>Single Click:</strong> Normal operation, one success message</li>
+                <li>✅ <strong>Rapid Clicks:</strong> Only first click processed, others ignored</li>
+                <li>✅ <strong>Visual Feedback:</strong> Buttons disabled during operation</li>
+                <li>✅ <strong>Error Handling:</strong> Proper cleanup if API fails</li>
+                <li>✅ <strong>Cross Protection:</strong> Can't click + while - is processing</li>
+                <li>✅ <strong>Debounce:</strong> 500ms minimum between actions</li>
+            </ul>
+        </div>
+
+        <div class="test-section fix-section">
+            <h2>📱 Works on Both Views</h2>
+            <p>The fix applies to:</p>
+            <ul>
+                <li>✅ Mobile product detail pages</li>
+                <li>✅ Desktop product cards</li>
+                <li>✅ Desktop product detail pages</li>
+                <li>✅ Cart page quantity selectors</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔧 Duplicate Click Prevention Test Loaded');
+        console.log('🧪 Test rapid clicking on + and - buttons');
+        console.log('✅ Should see only one success message per action');
+    </script>
+</body>
+</html>

@@ -241,6 +241,14 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
 
         try {
             setSending(true);
+            
+            console.log(`💬 Frontend - Sending message:`);
+            console.log(`  - From (senderId): ${user._id} (${user.name})`);
+            console.log(`  - To (receiverId): ${otherUser._id} (${otherUser.name})`);
+            console.log(`  - ChatId: ${chat._id}`);
+            console.log(`  - Content: ${messageContent}`);
+            console.log(`  - Chat buyerId: ${chat.buyerId._id}, sellerId: ${chat.sellerId._id}`);
+            
             const response = await Axios({
                 url: summaryApi.sendMessage.url,
                 method: summaryApi.sendMessage.method,
@@ -582,7 +590,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
 
             {/* Order Details Modal */}
             {showOrderDetails && orderDetails && (
-                <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0,0,0,0.9)' }}>
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-neutral-800 bg opacity-90">
                     <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-6">
@@ -767,7 +775,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
 
             {/* Review Prompt Modal */}
             {showReviewPrompt && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black bg opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 m-4 max-w-md w-full shadow-xl">
                         <div className="text-center">
                             <div className="w-16 h-16 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
