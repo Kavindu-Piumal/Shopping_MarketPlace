@@ -6,7 +6,8 @@ import {
     ConfirmOrderController, 
     UpdateOrderStatusController, 
     GetSellerOrdersController,
-    TestSellerValidationController
+    TestSellerValidationController,
+    FinalizeOrderController
 } from '../controllers/order.controller.js';
 
 const OrderRouter= Router();
@@ -15,6 +16,7 @@ OrderRouter.post("/cash-on-delivery",auth,CashOnDeliveryController)
 OrderRouter.get("/order-list",auth,GetOrderDetailsController)
 OrderRouter.get("/seller-orders",auth,GetSellerOrdersController)
 OrderRouter.put("/confirm/:orderId",auth,ConfirmOrderController)
+OrderRouter.put("/finalize/:orderId",auth,FinalizeOrderController)
 OrderRouter.put("/status/:orderId",auth,UpdateOrderStatusController)
 OrderRouter.post("/test-seller-validation", auth, TestSellerValidationController)
 

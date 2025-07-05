@@ -65,21 +65,31 @@ const NotificationsMenu = ({ close }) => {
   const [clearingAll, setClearingAll] = useState(false);
   const [deletingNotification, setDeletingNotification] = useState(null);
 
-  const handleNotificationClickWithLoading = async (notification) => {
+  const handleNotificationClickWithLoading = async (e, notification) => {
+    // Prevent any event bubbling
+    e.stopPropagation();
+    e.preventDefault();
+
     if (clickedNotification === notification._id) return; // Prevent double clicks
     
     setClickedNotification(notification._id);
     try {
+      // Handle the notification click and navigation
       await handleNotificationClick(notification);
-      close(); // Close menu after successful click
+
+      // Close the panel after a short delay to allow navigation
+      setTimeout(() => {
+        close();
+        setClickedNotification(null);
+      }, 150);
     } catch (error) {
       console.error('Error handling notification click:', error);
-    } finally {
       setClickedNotification(null);
     }
   };
 
-  const handleClearAll = async () => {
+  const handleClearAll = async (e) => {
+    e.stopPropagation(); // Prevent panel from closing
     if (clearingAll) return; // Prevent double clicks
     
     setClearingAll(true);
@@ -87,7 +97,6 @@ const NotificationsMenu = ({ close }) => {
       const result = await clearAll();
       if (!result.success) {
         console.error('Clear all failed:', result.error);
-        // Optionally show error message to user
       }
     } catch (error) {
       console.error('Error clearing all notifications:', error);
@@ -97,8 +106,10 @@ const NotificationsMenu = ({ close }) => {
   };
 
   const handleDeleteNotification = async (e, notificationId) => {
-    e.stopPropagation(); // Prevent triggering the notification click
-    
+    // Completely stop event propagation
+    e.stopPropagation();
+    e.preventDefault();
+
     if (deletingNotification === notificationId) return; // Prevent double clicks
     
     setDeletingNotification(notificationId);
@@ -106,7 +117,6 @@ const NotificationsMenu = ({ close }) => {
       const result = await deleteNotification(notificationId);
       if (!result.success) {
         console.error('Delete notification failed:', result.error);
-        // Optionally show error message to user
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
@@ -173,7 +183,7 @@ const NotificationsMenu = ({ close }) => {
             return (
               <div
                 key={notif._id}
-                onClick={() => handleNotificationClickWithLoading(notif)}
+                onClick={(e) => handleNotificationClickWithLoading(e, notif)}
                 className={`p-3 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
                   clickedNotification === notif._id 
                     ? 'opacity-50 cursor-wait' 
@@ -202,6 +212,7 @@ const NotificationsMenu = ({ close }) => {
                     <button
                       onClick={(e) => handleDeleteNotification(e, notif._id)}
                       disabled={deletingNotification === notif._id}
+                      data-prevent-panel-close="true"
                       className={`p-1 rounded-full transition-colors ${
                         deletingNotification === notif._id
                           ? 'text-gray-400 cursor-wait'

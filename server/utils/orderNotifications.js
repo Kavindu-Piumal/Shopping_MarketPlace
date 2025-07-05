@@ -1,4 +1,4 @@
-import sendEmail from '../config/sendEmail.js';
+import sendEmail from '../config/sendGridEmail.js';
 import UserModel from '../models/user.model.js';
 import ProductModel from '../models/product.model.js';
 import ChatModel from '../models/chat.model.js';

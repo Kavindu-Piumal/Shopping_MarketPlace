@@ -15,7 +15,8 @@ const ReviewSection = forwardRef(({ productId, productName, onReviewChange = nul
         ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
     });
     const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);    const [hasMore, setHasMore] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
     const [editingReview, setEditingReview] = useState(null);
     const [editData, setEditData] = useState({ rating: 0, comment: '' });
     const [deleteConfirm, setDeleteConfirm] = useState({ show: false, reviewId: null });
@@ -25,7 +26,7 @@ const ReviewSection = forwardRef(({ productId, productName, onReviewChange = nul
         refreshReviews: () => fetchReviews(1)
     }));
 
-const fetchReviews = async (pageNum = 1) => {
+    const fetchReviews = async (pageNum = 1) => {
         try {
             setLoading(true);
             const response = await Axios({
@@ -36,6 +37,11 @@ const fetchReviews = async (pageNum = 1) => {
             if (response.data.success) {
                 const { reviews: newReviews, stats: reviewStats, pagination } = response.data.data;
                 
+                // Ensure averageRating is a number
+                if (reviewStats) {
+                    reviewStats.averageRating = parseFloat(reviewStats.averageRating) || 0;
+                }
+
                 if (pageNum === 1) {
                     setReviews(newReviews);
                 } else {
@@ -56,7 +62,9 @@ const fetchReviews = async (pageNum = 1) => {
         } finally {
             setLoading(false);
         }
-    };    useEffect(() => {
+    };
+
+    useEffect(() => {
         fetchReviews(1);
     }, [productId]);
 
@@ -136,6 +144,13 @@ const fetchReviews = async (pageNum = 1) => {
         return (stats.ratingDistribution[rating] / total) * 100;
     };
 
+    // Get appropriate color class for rating bar
+    const getRatingBarColor = (rating) => {
+        if (rating >= 4) return "bg-green-500"; // Good ratings
+        if (rating >= 3) return "bg-yellow-400"; // Average ratings
+        return "bg-red-400"; // Poor ratings
+    };
+
     if (loading && page === 1) {
         return (
             <div className="bg-white rounded-lg p-6 shadow-sm border border-green-100">
@@ -183,14 +198,14 @@ const fetchReviews = async (pageNum = 1) => {
                             <div className="space-y-2">
                                 {[5, 4, 3, 2, 1].map((rating) => (
                                     <div key={rating} className="flex items-center gap-2 text-sm">
-                                        <span className="w-8">{rating} ★</span>
-                                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                        <span className="w-8 text-yellow-500 font-medium">{rating} ★</span>
+                                        <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
                                             <div
-                                                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                                                className={`${getRatingBarColor(rating)} h-2.5 rounded-full transition-all duration-300`}
                                                 style={{ width: `${getRatingWidth(rating)}%` }}
                                             ></div>
                                         </div>
-                                        <span className="w-8 text-gray-600">
+                                        <span className="w-8 text-gray-600 font-medium">
                                             {stats.ratingDistribution[rating]}
                                         </span>
                                     </div>

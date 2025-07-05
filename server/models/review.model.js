@@ -19,7 +19,7 @@ const reviewSchema = new mongoose.Schema({
     chatId: {
         type: mongoose.Schema.ObjectId,
         ref: "chat",
-        required: true
+        required: false  // Changed from true to false to make it optional
     },
     rating: {
         type: Number,

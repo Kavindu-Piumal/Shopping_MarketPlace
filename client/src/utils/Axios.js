@@ -3,8 +3,7 @@ import { baseURL } from "../common/summaryApi";
 
 const Axios=axios.create({
   baseURL: baseURL,
-  withCredentials: true,
-  
+  withCredentials: true
 });
 
 Axios.interceptors.request.use(
@@ -20,16 +19,16 @@ Axios.interceptors.request.use(
   }
 );
 
-//extend the lifespan of access token with the help of refresh token
-
-Axios.interceptors.request.use(
+// Response interceptor to handle errors silently for expected business logic errors
+Axios.interceptors.response.use(
   (response)=>{
     return response;
   },
   async (error)=>{
     let originalRequest=error.config;
 
-    if(error.response.status=== 401 && !originalRequest._retry){
+    // Handle 401 unauthorized errors with token refresh
+    if(error.response?.status === 401 && !originalRequest._retry){
       originalRequest._retry=true;
 
       const refreshtoken=localStorage.getItem('refreshtoken');
@@ -41,11 +40,11 @@ Axios.interceptors.request.use(
           originalRequest.headers.Authorization=`Bearer ${newAccessToken}`;
           return Axios(originalRequest);
         }
-
-
       }
-      
     }
+
+
+    // For other errors, allow normal error logging
     return Promise.reject(error);
   }
 )

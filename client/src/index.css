@@ -1506,3 +1506,24 @@ button:contains("Add to Cart"):not(.add-to-cart-container button) {
   }
 }
 
+/* Mobile notification badge fix */
+@media (max-width: 1023px) {
+  .notification-badge-mobile {
+    width: 18px !important;
+    height: 18px !important;
+    position: absolute;
+    top: -8px !important;
+    right: -4px !important;
+    font-size: 10px !important;
+    border-radius: 50% !important;
+    background-color: #ef4444 !important;
+    color: white !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    min-width: 18px !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+  }
+}

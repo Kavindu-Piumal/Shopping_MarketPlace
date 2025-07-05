@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
-import MobileBottomNav from './components/MobileBottomNav'
+import MobileBottomNav from './components/MobileBottomNav_Fixed'
 import { setAllCategory , setAllSubCategory ,setLoadingCategory } from './Store/ProductSlice';
 import { useDispatch } from 'react-redux';
 import Axios from './utils/Axios';

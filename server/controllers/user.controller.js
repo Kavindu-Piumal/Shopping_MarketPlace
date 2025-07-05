@@ -1,4 +1,4 @@
-import sendEmail from "../config/sendEmail.js";
+import sendEmail from "../config/sendGridEmail.js";
 import UserModel from "../models/user.model.js"
 import bcrypt from "bcryptjs";
 import verifyEmailTemplate from "../utils/verifyEmailTemplate.js";
@@ -291,39 +291,62 @@ export async function forgotPasswordController(req, res) {
             });
         }
 
-    const otp=generateOtp();
-    const expireTime =new Date()+ 30*60*1000; // 30 minutes from now  
+        const otp = generateOtp();
+        const expireTime = new Date(Date.now() + 30*60*1000); // 30 minutes from now
 
-    const update=await UserModel.findByIdAndUpdate(user._id,{
-        forgot_password_otp: otp,
-        forgot_password_expiry:new Date(expireTime).toISOString()
-    })
+        // Update user with OTP regardless of email sending success
+        await UserModel.findByIdAndUpdate(user._id, {
+            forgot_password_otp: otp,
+            forgot_password_expiry: new Date(expireTime).toISOString()
+        });
 
-    await sendEmail({
-        sendTo: email,
-        subject: "Reset ABC Account Password",
-        html: forgotPasswordTemplate({
-            name: user.name,
-            otp: otp,
-        }),
-    });
+        // Try to send email
+        const emailResult = await sendEmail({
+            sendTo: email,
+            subject: "Reset ABC Account Password",
+            html: forgotPasswordTemplate({
+                name: user.name,
+                otp: otp,
+            }),
+        });
 
-    return res.status(200).json({
-        success: true,
-        error: false,
-        message:"Check Your Email"
-    })
+        // For development purposes - provide OTP in response if email sending fails
+        // IMPORTANT: Remove this in production for security!
+        if (!emailResult) {
+            console.log(`⚠️ Email sending failed to ${email}, returning OTP in response for development`);
 
+            // Check if this is a development environment
+            if (process.env.NODE_ENV === 'development' || process.env.ENABLE_OTP_IN_RESPONSE === 'true') {
+                return res.status(200).json({
+                    success: true,
+                    error: false,
+                    message: "Email sending failed. For development purposes, your OTP is: " + otp,
+                    devOtp: otp // Only for development!
+                });
+            } else {
+                // In production, we should not expose the OTP
+                return res.status(500).json({
+                    success: false,
+                    error: true,
+                    message: "Failed to send OTP email. Please contact support or try again later."
+                });
+            }
+        }
 
-    }catch (error) {
+        return res.status(200).json({
+            success: true,
+            error: false,
+            message: "Check Your Email"
+        });
+    } catch (error) {
+        console.error("Forgot password error:", error);
         return res.status(500).json({
             success: false,
             message: error.message || error,
             error: true
         }); 
     }
-       
-}     
+}
 
 export async function verifyForgotPasswordController(req, res) {
     try {

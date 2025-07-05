@@ -53,7 +53,9 @@ const CardProduct = ({ data }) => {
 
         if (response.data.success) {
           const { stats } = response.data.data;
-          if (stats.totalReviews > 0) {
+          if (stats && stats.totalReviews > 0) {
+            // Ensure we're parsing the average rating as a number
+            stats.averageRating = parseFloat(stats.averageRating) || 0;
             setReviewStats(stats);
           }
         }
@@ -68,8 +70,18 @@ const CardProduct = ({ data }) => {
     }
   }, [data._id]);
 
+  // Calculate number of reviews text
+  const getReviewText = (count) => {
+    return count === 1 ? "1 review" : `${count} reviews`;
+  };
+
   return (
     <div
+      onClick={handleProductClick}
+      onKeyDown={handleKeyPress}
+      tabIndex={0}
+      role="button"
+      aria-label={`View details for ${data.name}`}
       className="card w-full bg-white rounded-eco p-2 sm:p-4 shadow-eco border border-emerald-50 group relative overflow-hidden hover:shadow-lg transition-shadow flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 touch-manipulation"
     >
       {/* Eco Badge - Always reserve space for consistent layout */}
@@ -83,11 +95,6 @@ const CardProduct = ({ data }) => {
       
       {/* Product Image with Centered Add-to-Cart Controls */}
       <div 
-        onClick={handleProductClick}
-        onKeyDown={handleKeyPress}
-        tabIndex={0}
-        role="button"
-        aria-label={`View details for ${data.name}`}
         className="bg-emerald-50 h-20 sm:h-28 lg:h-32 w-full rounded-xl flex items-center justify-center mb-0 sm:mb-2 relative group"
       >
         <img
@@ -108,9 +115,13 @@ const CardProduct = ({ data }) => {
         <div className="flex items-center gap-1 min-h-[16px]">
           {reviewStats && reviewStats.totalReviews > 0 ? (
             <>
-              <StarRating rating={reviewStats.averageRating} size="text-xs" />
+              <StarRating
+                rating={reviewStats.averageRating}
+                size="text-xs"
+                showRatingNumber={false}
+              />
               <span className="text-xs text-gray-500">
-                ({reviewStats.totalReviews})
+                ({getReviewText(reviewStats.totalReviews)})
               </span>
             </>
           ) : (
@@ -131,7 +142,7 @@ const CardProduct = ({ data }) => {
         </div>
         
         {/* Add-to-cart controls centered below price - only on desktop */}
-        <div className="hidden sm:flex justify-center mt-2">
+        <div className="hidden sm:flex justify-center mt-2" onClick={(e) => e.stopPropagation()}>
           {data.stock == 0 ? (
             <div className="text-red-500 text-center bg-red-50 py-1 px-3 rounded-lg font-medium text-xs">
               ❌ Out Of Stock

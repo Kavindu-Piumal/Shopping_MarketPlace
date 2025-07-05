@@ -7,7 +7,7 @@ const NotificationContainer = ({ notifications, onClose }) => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] max-w-sm">
+    <div className="fixed bottom-4 right-6 z-[9999] max-w-sm">
       <div className="space-y-2">
         {notifications.map((notification) => (
           <CustomNotification

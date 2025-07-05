@@ -135,17 +135,24 @@ const ChatList = ({ chats, selectedChat, onChatSelect, loading, user, isMobile =
                                             }`}>
                                                 {chat.orderId ? (
                                                     chat.orderCompleted 
-                                                        ? '✅ Completed' 
-                                                        : chat.orderConfirmed 
-                                                            ? '✅ Confirmed' 
-                                                            : chat.isActive 
-                                                                ? '🟢 Active' 
+                                                        ? '✅ Delivered • Chat Open'
+                                                        : chat.orderConfirmed
+                                                            ? '📦 Confirmed • Chat Open'
+                                                            : chat.isActive
+                                                                ? '🟢 Active Order'
                                                                 : '⭕ Inactive'
                                                 ) : (
-                                                    '💬 Chat'
+                                                    '💬 Product Chat'
                                                 )}
                                             </span>
-                                            
+
+                                            {/* Add helpful subtitle for completed orders */}
+                                            {chat.orderId && chat.orderCompleted && (
+                                                <span className="text-xs text-emerald-600 italic">
+                                                    Continue chatting for support
+                                                </span>
+                                            )}
+
                                             {/* Show unread message indicator */}
                                             {chat.hasUnreadMessages && (
                                                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>

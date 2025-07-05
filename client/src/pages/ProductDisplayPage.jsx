@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -201,23 +200,6 @@ const ProductDisplayPage = () => {
             <div className="w-full h-full flex items-center justify-center bg-gray-100">
               <p className="text-gray-500">No image available</p>
             </div>
-          )}
-          
-          {/* Image navigation arrows for mobile */}
-          {data.image.length > 1 && (
-            <>                <button
-                  onClick={() => Setimage(image > 0 ? image - 1 : data.image.length - 1)}
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200 touch-optimized mobile-action-button"
-                >
-                  <FaAngleLeft className="text-gray-700" />
-                </button>
-                <button
-                  onClick={() => Setimage(image < data.image.length - 1 ? image + 1 : 0)}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200 touch-optimized mobile-action-button"
-                >
-                <FaAngleRight className="text-gray-700" />
-              </button>
-            </>
           )}
         </div>
           
@@ -474,7 +456,6 @@ const ProductDisplayPage = () => {
             </div>
           </div>
 
-          {/* ...existing desktop sections... */}
           {/* Product Description - Single Section */}
           <div className="py-4 my-4 bg-white rounded-xl shadow-md border border-green-100">
             <div className="px-4">
@@ -517,7 +498,6 @@ const ProductDisplayPage = () => {
 
         {/* Desktop Product Information Section */}
         <div className="p-6 lg:p-8 space-y-6">
-          {/* ...rest of existing desktop content... */}
           {/* Sustainability Badge */}
           <div className="flex items-center gap-2">
             <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">

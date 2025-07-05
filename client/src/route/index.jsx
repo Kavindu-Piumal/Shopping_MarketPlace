@@ -33,7 +33,7 @@ import ShopsPage from "../pages/ShopsPage";
 import ShopDetailPage from "../pages/ShopDetailPage";
 import MyShop from "../pages/MyShop";
 import ManageShops from "../pages/ManageShops";
-
+import AddReviewPage from "../pages/AddReviewPage";
 
 const router = createBrowserRouter([
   {
@@ -152,7 +152,12 @@ const router = createBrowserRouter([
       },      {
         path: "/chat",
         element: <ChatPage/>
-      },      {
+      },
+      {
+        path: "/add-review/:productId",
+        element: <AddReviewPage/>
+      },
+      {
         path: "/privacy-policy",
         element: <PrivacyPolicy/>
       },
@@ -171,5 +176,3 @@ const router = createBrowserRouter([
 ])
 
 export default router;
-
-

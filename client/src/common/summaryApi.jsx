@@ -238,6 +238,41 @@ const summaryApi = {
         url: `${baseURL}/api/review/delete`,
         method: "delete"
     },
+    // Additional Chat APIs for enhanced functionality
+    finalizeOrder: {
+        url: `${baseURL}/api/order/finalize`,
+        method: "put"
+    },
+    markMessageAsRead: {
+        url: `${baseURL}/api/chat/mark-read`,
+        method: "put"
+    },
+    getUnreadCount: {
+        url: `${baseURL}/api/chat/unread-count`,
+        method: "get"
+    },
+    // Review eligibility check
+    checkReviewEligibility: {
+        url: `${baseURL}/api/review/eligibility`,
+        method: "get"
+    },
+    getUserReviews: {
+        url: `${baseURL}/api/review/user-reviews`,
+        method: "get"
+    },
+    // Shop review APIs
+    addShopReview: {
+        url: `${baseURL}/api/review/shop/add`,
+        method: "post"
+    },
+    getShopReviews: {
+        url: `${baseURL}/api/review/shop`,
+        method: "get"
+    },
+    canUserReviewShop: {
+        url: `${baseURL}/api/review/shop/can-review`,
+        method: "get"
+    },
     // Shop APIs
     createShop: {
         url: `${baseURL}/api/shop/create`,

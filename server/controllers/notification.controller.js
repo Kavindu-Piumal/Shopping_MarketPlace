@@ -1,5 +1,4 @@
 import Notification from '../models/notification.model.js';
-
 // Get user notifications
 export const getUserNotificationsController = async (req, res) => {
   try {
@@ -281,26 +280,26 @@ export const createOrderNotification = async (order, type, recipientId, io = nul
   const notificationMap = {
     order_placed: {
       title: 'New Order Received!',
-      message: `You received a new order #${order.orderId || order._id} worth ₹${order.totalAmt}`,
+      message: `You received a new order #${order.orderId || order._id} worth LKR ${order.totalAmt}`,
       actionUrl: `/chat?orderId=${order._id}&with=${order.buyerId}`,
       icon: 'shopping-bag'
     },
     order_confirmed: {
       title: 'Order Confirmed',
       message: `Your order #${order.orderId || order._id} has been confirmed by seller`,
-      actionUrl: `/myorders`,
+      actionUrl: `/dashboard/myorders`,
       icon: 'check-circle'
     },
     order_shipped: {
       title: 'Order Shipped',
       message: `Your order #${order.orderId || order._id} has been shipped`,
-      actionUrl: `/myorders`,
+      actionUrl: `/dashboard/myorders`,
       icon: 'truck'
     },
     order_delivered: {
       title: 'Order Delivered',
       message: `Your order #${order.orderId || order._id} has been delivered`,
-      actionUrl: `/myorders`,
+      actionUrl: `/dashboard/myorders`,
       icon: 'check-circle'
     }
   };

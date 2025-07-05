@@ -71,13 +71,20 @@ const Category = () => {
         data: deleteCategory
       })
 
-      const { data:responseData } = response;      if(responseData.success){
+      const { data:responseData } = response;
+
+      // Check if the response indicates success or business logic error
+      if(responseData.success){
         showSuccess(responseData.message)
         fetchCategories();
         setOpenConfirmBoxDelete(false)
+      } else {
+        // Handle business logic errors (like category has dependencies)
+        axiosNotificationError({ response: { data: responseData } });
       }
 
     }catch(error){
+      // This will only catch actual network/server errors, not business logic errors
       axiosNotificationError(error)
     }
   }

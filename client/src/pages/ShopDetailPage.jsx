@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaStore, FaStar, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaGlobe, FaFacebook, FaInstagram, FaTwitter, FaArrowLeft, FaTag, FaBox } from 'react-icons/fa';
+import { FaStore, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaGlobe, FaFacebook, FaInstagram, FaTwitter, FaArrowLeft, FaTag, FaBox } from 'react-icons/fa';
 import Axios from '../utils/Axios';
 import summaryApi from '../common/summaryApi';
 import { useAxiosNotificationError } from '../utils/AxiosNotificationError';
@@ -240,13 +240,8 @@ const ShopDetailPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main Info */}
               <div className="lg:col-span-2">
-                {/* Rating and Stats */}
+                {/* Product Stats */}
                 <div className="flex items-center gap-6 mb-6">
-                  <div className="flex items-center gap-2">
-                    <FaStar className="text-yellow-400" />
-                    <span className="font-semibold">{shop.rating.toFixed(1)}</span>
-                    <span className="text-gray-600">({shop.totalReviews} reviews)</span>
-                  </div>
                   <div className="flex items-center gap-2">
                     <FaBox className="text-emerald-600" />
                     <span className="font-semibold">{shop.totalProducts}</span>

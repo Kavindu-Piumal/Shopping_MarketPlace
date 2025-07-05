@@ -7,6 +7,7 @@ import { PriceWithDiscount } from "../utils/PricewithDiscount";
 import { FaRegHandPointRight, FaCartPlus, FaHome } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import AddtoCartButton from "./addtoCartButton";
+import MobileCart from "./MobileCart";
 import emptycart from "../assets/emptycart.png";
 import { useNotification } from "../context/NotificationContext";
 
@@ -36,15 +37,18 @@ const DisplayCartItem = ({ close }) => {
     }
   };
 
-  const handleClose = () => {
-    if (close && typeof close === 'function') {
-      close();
-    }
-  };
+  // Check if we're on mobile (screen width less than 768px)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
+  // Use dedicated mobile cart component for mobile view
+  if (isMobile) {
+    return <MobileCart />;
+  }
+
+  // Desktop modal view - Clean and focused
   return (
     <div className="bg-white rounded-lg shadow-2xl border border-gray-200 w-80 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-6rem)] flex flex-col overflow-hidden">
-      {/* Header */}
+      {/* Desktop Header with close button */}
       <div className="flex items-center justify-between gap-3 p-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-green-100 rounded-full">
@@ -59,7 +63,7 @@ const DisplayCartItem = ({ close }) => {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={handleClose}
+            onClick={() => close && close()}
             className="p-2 hover:bg-red-100 active:bg-red-200 rounded-full transition-colors"
             type="button"
           >
@@ -68,11 +72,10 @@ const DisplayCartItem = ({ close }) => {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Desktop content */}
       <div className="flex-1 overflow-y-auto">
         {cartItem.filter(item => item && item.productId).length > 0 ? (
           <>
-            {/* Savings banner */}
             <div className="flex items-center rounded justify-between px-4 py-3 bg-blue-50 text-blue-600 text-sm">
               <p className="font-medium">💰 Your Total Savings</p>
               <p className="font-semibold">
@@ -80,7 +83,6 @@ const DisplayCartItem = ({ close }) => {
               </p>
             </div>
             
-            {/* Cart items */}
             <div className="p-4 space-y-3 overflow-y-auto max-h-[300px]">
               {cartItem.filter(item => item && item.productId).map((item, index) => (
                 <div
@@ -119,9 +121,7 @@ const DisplayCartItem = ({ close }) => {
         )}
       </div>
 
-      {/* Action buttons */}
       <div className="flex-shrink-0 p-4 border-t bg-white space-y-2">
-        {/* Continue Shopping Button - only show when cart is empty */}
         {cartItem.filter(item => item && item.productId).length === 0 && (
           <button 
             onClick={handleContinueShopping}
@@ -132,7 +132,6 @@ const DisplayCartItem = ({ close }) => {
           </button>
         )}
         
-        {/* Checkout Button - only show if cart has items */}
         {cartItem.filter(item => item && item.productId).length > 0 && (
           <button 
             onClick={redirectToCheckOutPage} 

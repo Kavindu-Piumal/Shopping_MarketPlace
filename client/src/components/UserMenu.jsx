@@ -144,8 +144,9 @@ const UserMenu = ({ close, hideTitle = false }) => {
           Save Address
         </Link>{" "}
         <Link
-          to={"/chat"}
+          to="/chat"
           onClick={close}
+          state={{ from: 'user-menu' }}
           className="rounded px-3 py-2 font-medium bg-emerald-50 hover:bg-emerald-200 text-emerald-800 transition"
         >
           Chat

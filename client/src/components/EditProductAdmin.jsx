@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaCloudUploadAlt } from "react-icons/fa";
 import UploadImages from "../utils/UploadImage";
 import Loading from "../components/Loading";
@@ -37,6 +37,78 @@ const EditProductAdmin = ({ close, data: propsData, fetchProductData }) => {
   const allSubCategory = useSelector((state) => state.product.allSubCategory);
   const [openaddfield, setOpenAddField] = useState(false);
   const [fieldname, setFieldName] = useState("");
+
+  // Initialize selected category and subcategory when component mounts
+  useEffect(() => {
+    console.log("🔍 Debug - Product data categories:", data.category);
+    console.log("🔍 Debug - Product data subcategories:", data.subCategory);
+    console.log("🔍 Debug - Available categories from Redux:", allCategory);
+    console.log("🔍 Debug - Available subcategories from Redux:", allSubCategory);
+
+    // Convert category IDs to full objects for display
+    if (
+      allCategory &&
+      allCategory.length > 0 &&
+      data.category &&
+      data.category.length > 0
+    ) {
+      const categoryObjects = data.category
+        .map((categoryId) => {
+          const foundCategory = allCategory.find((cat) => cat._id === categoryId);
+          if (!foundCategory) {
+            console.warn("⚠️ Category not found for ID:", categoryId);
+          }
+          return foundCategory;
+        })
+        .filter(Boolean); // Remove any undefined values
+
+      if (categoryObjects.length > 0) {
+        console.log("✅ Converting category IDs to objects:", categoryObjects);
+        setData((prev) => ({
+          ...prev,
+          category: categoryObjects,
+        }));
+
+        // Set dropdown to first category
+        setSelectedCategory(categoryObjects[0]._id);
+      }
+    }
+
+    // Convert subcategory IDs to full objects for display
+    if (
+      allSubCategory &&
+      allSubCategory.length > 0 &&
+      data.subCategory &&
+      data.subCategory.length > 0
+    ) {
+      console.log("🔍 Looking for subcategory IDs:", data.subCategory);
+      console.log("🔍 In available subcategories:", allSubCategory.map(sub => ({ id: sub._id, name: sub.name })));
+
+      const subCategoryObjects = data.subCategory
+        .map((subCategoryId) => {
+          const foundSubCategory = allSubCategory.find((subCat) => subCat._id === subCategoryId);
+          if (!foundSubCategory) {
+            console.warn("⚠️ Subcategory not found for ID:", subCategoryId);
+            console.warn("⚠️ Available subcategory IDs:", allSubCategory.map(sub => sub._id));
+          }
+          return foundSubCategory;
+        })
+        .filter(Boolean); // Remove any undefined values
+
+      if (subCategoryObjects.length > 0) {
+        console.log("✅ Converting subcategory IDs to objects:", subCategoryObjects);
+        setData((prev) => ({
+          ...prev,
+          subCategory: subCategoryObjects,
+        }));
+
+        // Set dropdown to first subcategory
+        setSelectedSubCategory(subCategoryObjects[0]._id);
+      } else {
+        console.warn("❌ No matching subcategories found! Product subcategory IDs may be invalid.");
+      }
+    }
+  }, [allCategory, allSubCategory]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -140,7 +212,8 @@ const EditProductAdmin = ({ close, data: propsData, fetchProductData }) => {
           description: "",
           more_details: {},
         });
-      }    } catch (error) {
+      }
+    } catch (error) {
       console.log("Error in handleSubmit:", error);
       axiosNotificationError(error);
     }
@@ -331,30 +404,33 @@ const EditProductAdmin = ({ close, data: propsData, fetchProductData }) => {
                     }}
                   >
                     <option value={""}>Select Sub Category</option>
-                    {(Array.isArray(allSubCategory) ? allSubCategory : []).map(
-                      (c, index) =>
-                        c &&
-                        c._id && (
-                          <option key={c._id + index} value={c._id}>
-                            {c.name}
-                          </option>
-                        )
-                    )}
+                    {allSubCategory.map((sc, index) => {
+                      return (
+                        <option key={sc._id + index} value={sc._id}>
+                          {sc.name}
+                        </option>
+                      );
+                    })}
                   </select>
 
+                  {/* Show selected subcategories as tags/chips */}
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {data.subCategory.map((c, index) => {
+                    {data.subCategory.map((sc, index) => {
+                      if (!sc) return null;
+                      // If sc is an object, use as is; if it's an ID, look up the object
+                      const subCatObj = typeof sc === 'object' ? sc : allSubCategory.find(s => s._id === sc);
+                      if (!subCatObj) return null;
                       return (
                         <div
-                          key={c._id + index + "productsection"}
-                          className="text-sm flex items-center gap-1 bg-green-300"
+                          key={subCatObj._id + index + "subcategorysection"}
+                          className="text-sm flex items-center gap-1 bg-blue-200 px-2 py-1 rounded"
                         >
-                          <p>{c.name}</p>
+                          <p>{subCatObj.name}</p>
                           <div
-                            className="text-red-300 cursor-pointer hover:text-red-500"
+                            className="text-red-400 cursor-pointer hover:text-red-600"
                             onClick={() => handleRemovesubCategory(index)}
                           >
-                            <MdDeleteOutline size={20} />
+                            <MdDeleteOutline size={18} />
                           </div>
                         </div>
                       );

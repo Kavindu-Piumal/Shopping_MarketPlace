@@ -24,6 +24,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
     const [confirmingOrder, setConfirmingOrder] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showCompleteOrderConfirm, setShowCompleteOrderConfirm] = useState(false);
+    const [showConfirmOrderConfirm, setShowConfirmOrderConfirm] = useState(false);
     const [showReviewPrompt, setShowReviewPrompt] = useState(false);
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
@@ -31,9 +32,34 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
     const navigate = useNavigate();
     const { socket, isConnected, sendMessage, emitTyping, emitStopTyping } = useSocket();
 
-    const otherUser = chat.buyerId._id === user._id ? chat.sellerId : chat.buyerId;
-    const isBuyer = chat.buyerId._id === user._id;
-    const isSeller = chat.sellerId._id === user._id;
+    // Fix: More robust otherUser determination to prevent self-notifications
+    const determineOtherUser = () => {
+        console.log('🔍 Determining other user:');
+        console.log('  - Current user ID:', user._id);
+        console.log('  - Chat buyerId:', chat.buyerId?._id || chat.buyerId);
+        console.log('  - Chat sellerId:', chat.sellerId?._id || chat.sellerId);
+
+        // Convert IDs to strings for proper comparison
+        const currentUserId = String(user._id);
+        const buyerId = String(chat.buyerId?._id || chat.buyerId);
+        const sellerId = String(chat.sellerId?._id || chat.sellerId);
+
+        if (currentUserId === buyerId) {
+            console.log('  - Current user is buyer, other user is seller');
+            return chat.sellerId;
+        } else if (currentUserId === sellerId) {
+            console.log('  - Current user is seller, other user is buyer');
+            return chat.buyerId;
+        } else {
+            console.error('  - ERROR: Current user is neither buyer nor seller!');
+            // Fallback: return the buyer if current user is not buyer
+            return chat.buyerId;
+        }
+    };
+
+    const otherUser = determineOtherUser();
+    const isBuyer = String(chat.buyerId?._id || chat.buyerId) === String(user._id);
+    const isSeller = String(chat.sellerId?._id || chat.sellerId) === String(user._id);
 
     // Fetch messages
     const fetchMessages = async () => {
@@ -79,7 +105,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
     };
 
     // Confirm order (seller only)
-    const handleConfirmOrder = async () => {
+    const handleConfirmOrder = () => {
         if (!isSeller) {
             showError('Only sellers can confirm orders');
             return;
@@ -88,7 +114,15 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
         if (chat.orderConfirmed) {
             showError('Order has already been confirmed');
             return;
-        }        try {
+        }
+
+        // Show confirmation modal instead of basic browser confirm
+        setShowConfirmOrderConfirm(true);
+    };
+
+    // Process the actual order confirmation after user confirms in modal
+    const confirmConfirmOrder = async () => {
+        try {
             setConfirmingOrder(true);
             const response = await Axios({
                 url: `${summaryApi.confirmChatOrder.url}/${chat._id}`,
@@ -96,7 +130,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
             });
             
             if (response.data.success) {
-                showSuccess('Order confirmed successfully!');
+                showSuccess('✅ Order confirmed successfully! The buyer has been notified and can now proceed with the order.');
                 fetchOrderDetails();
                 fetchMessages();
                 onChatUpdate(response.data.data.chat);
@@ -106,6 +140,7 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
             axiosNotificationError(error);
         } finally {
             setConfirmingOrder(false);
+            setShowConfirmOrderConfirm(false);
         }
     };
 
@@ -389,10 +424,11 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
 
     return (
         <div className="h-full flex flex-col">
-            {/* Chat Header */}
-            <div className="p-4 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-lime-50">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+            {/* Chat Header - Mobile Optimized */}
+            <div className="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-lime-50">
+                {/* Top Row - User Info and Menu */}
+                <div className="p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1">
                         <img
                             src={chat.productId?.image?.[0] || '/placeholder-product.png'}
                             alt={chat.productId?.name}
@@ -400,90 +436,78 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
                             onClick={() => handleProductImageClick(chat.productId?._id, chat.productId?.name)}
                             title="Click to view product details"
                         />
-                        <div>
-                            <h3 className="font-semibold text-emerald-900">{otherUser.name}</h3>
-                            <p className="text-sm text-emerald-600">{chat.productId?.name}</p>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-emerald-900 truncate">{otherUser.name}</h3>
+                            <p className="text-sm text-emerald-600 truncate">{chat.productId?.name}</p>
                             {chat.orderId ? (
-                                <p className="text-xs text-emerald-500">Order: {chat.orderId?.orderId}</p>
+                                <p className="text-xs text-emerald-500 truncate">Order: {chat.orderId?.orderId}</p>
                             ) : (
                                 <p className="text-xs text-emerald-500">Product Inquiry</p>
                             )}
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                        {/* Order Details Button - Only show if there's an order */}
-                        {orderDetails && chat.orderId && (
-                            <button
-                                onClick={() => setShowOrderDetails(true)}
-                                className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-lg hover:bg-gray-200 transition flex items-center gap-1"
-                                title="View Order Details"
-                            >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Details
-                            </button>
-                        )}
-                        
-                        {/* Order Status - Only show if there's an order */}
-                        {chat.orderId && (
-                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                                chat.orderCompleted 
-                                    ? 'bg-green-100 text-green-700' 
-                                    : chat.orderConfirmed
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'bg-emerald-100 text-emerald-700'
-                            }`}>
-                                {chat.orderCompleted ? 'Completed' : chat.orderConfirmed ? 'Confirmed' : 'Pending'}
-                            </span>
-                        )}
-                        
-                        {/* Product Chat Indicator - Show if no order */}
-                        {!chat.orderId && (
-                            <span className="text-xs px-3 py-1 rounded-full font-medium bg-blue-100 text-blue-700">
-                                Product Chat
-                            </span>
-                        )}
-                        
-                        {/* Complete Order Button (Buyer only) - Only for order chats */}
-                        {chat.orderId && isBuyer && !chat.orderCompleted && chat.orderConfirmed && (
-                            <button
-                                onClick={handleCompleteOrder}
-                                className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition"
-                            >
-                                Complete Order
-                            </button>
-                        )}
-
-                        {/* Confirm Order Button (Seller only) - Only for order chats */}
-                        {chat.orderId && isSeller && !chat.orderCompleted && !chat.orderConfirmed && (
-                            <button
-                                onClick={handleConfirmOrder}
-                                className="px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition"
-                                disabled={confirmingOrder}
-                            >
-                                {confirmingOrder ? 'Confirming...' : 'Confirm Order'}
-                            </button>
-                        )}
-
-                        {/* Delete Chat Button */}
-                        <button
-                            onClick={handleDeleteChat}
-                            className="px-3 py-1 bg-red-100 text-red-700 text-xs rounded-lg hover:bg-red-200 transition flex items-center gap-1"
-                            title="Delete Chat"
-                        >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Delete
-                        </button>
-                    </div>
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={() => setShowOrderDetails(true)}
+                        className="p-2 text-emerald-700 hover:bg-emerald-100 rounded-full transition"
+                        title="Options"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01" />
+                        </svg>
+                    </button>
                 </div>
+
+                {/* Order Status Bar - Only show if there's an order */}
+                {chat.orderId && (
+                    <div className="px-3 pb-3">
+                        <div className="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${
+                                    chat.orderCompleted 
+                                        ? 'bg-green-500' 
+                                        : chat.orderConfirmed
+                                            ? 'bg-blue-500'
+                                            : 'bg-orange-500'
+                                }`}></div>
+                                <span className="text-sm font-medium text-gray-700">
+                                    {chat.orderCompleted ? 'Completed' : chat.orderConfirmed ? 'Confirmed' : 'Pending'}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    {DisplayPriceInRupees(orderDetails?.totalAmount || 0)}
+                                </span>
+                            </div>
+
+                            {/* Action Button */}
+                            {chat.orderId && !chat.orderCompleted && (
+                                <>
+                                    {isBuyer && chat.orderConfirmed && (
+                                        <button
+                                            onClick={handleCompleteOrder}
+                                            className="px-4 py-1.5 bg-green-500 text-white text-sm rounded-full hover:bg-green-600 transition"
+                                        >
+                                            Complete
+                                        </button>
+                                    )}
+                                    {isSeller && !chat.orderConfirmed && (
+                                        <button
+                                            onClick={handleConfirmOrder}
+                                            className="px-4 py-1.5 bg-blue-500 text-white text-sm rounded-full hover:bg-blue-600 transition"
+                                            disabled={confirmingOrder}
+                                        >
+                                            {confirmingOrder ? 'Confirming...' : 'Confirm'}
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Messages Area */}
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-green-50/30 to-emerald-50/30">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-gradient-to-br from-green-50/30 to-emerald-50/30">
                 {loading ? (
                     <div className="flex justify-center py-8">
                         <div className="animate-spin w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full"></div>
@@ -499,13 +523,13 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
                         ))}
                         
                         {typing && (
-                            <div className="flex items-center gap-2 text-emerald-600 text-sm">
+                            <div className="flex items-center gap-2 text-emerald-600 text-sm px-2">
                                 <div className="flex gap-1">
                                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"></div>
                                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                                 </div>
-                                <span>{otherUser.name} is typing...</span>
+                                <span className="text-xs">{otherUser.name} is typing...</span>
                             </div>
                         )}
                         
@@ -514,41 +538,52 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
                 )}
             </div>
 
-            {/* Message Input Area */}
-            {chat.isActive && !chat.orderCompleted && (
-                <div className="p-4 border-t border-emerald-100 bg-white">
-                    <div className="flex items-end gap-2">
-                        {/* Attachment buttons */}
-                        <div className="flex gap-1">
-                            <button
-                                onClick={() => setShowImageUpload(true)}
-                                className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition"
-                                title="Send Image"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </button>
-                            
-                            <button
-                                onClick={() => setShowVoiceRecorder(true)}
-                                className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition"
-                                title="Send Voice Message"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                                </svg>
-                            </button>
+            {/* Message Input Area - Mobile Optimized - Allow messaging even after order completion */}
+            {chat.isActive && (
+                <div className="p-3 border-t border-emerald-100 bg-white">
+                    {/* Show helpful message for completed orders */}
+                    {chat.orderCompleted && (
+                        <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-xs text-green-700 text-center">
+                                ✅ Order delivered • Continue chatting for support, feedback, or future orders
+                            </p>
                         </div>
-                        
-                        {/* Message input */}
+                    )}
+
+                    {/* Attachment buttons row */}
+                    <div className="flex justify-center gap-4 mb-3">
+                        <button
+                            onClick={() => setShowImageUpload(true)}
+                            className="flex items-center gap-2 px-4 py-2 text-emerald-600 bg-emerald-50 rounded-full hover:bg-emerald-100 transition text-sm"
+                            title="Send Image"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Photo
+                        </button>
+
+                        <button
+                            onClick={() => setShowVoiceRecorder(true)}
+                            className="flex items-center gap-2 px-4 py-2 text-emerald-600 bg-emerald-50 rounded-full hover:bg-emerald-100 transition text-sm"
+                            title="Send Voice Message"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                            Voice
+                        </button>
+                    </div>
+
+                    {/* Message input row */}
+                    <div className="flex items-end gap-2">
                         <div className="flex-1 relative">
                             <textarea
                                 value={newMessage}
                                 onChange={handleTyping}
                                 onKeyPress={handleKeyPress}
-                                placeholder="Type your message..."
-                                className="w-full p-3 border border-emerald-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                                placeholder={chat.orderCompleted ? "Order delivered - chat for support or feedback..." : "Type your message..."}
+                                className="w-full p-3 pr-12 border border-emerald-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent text-sm"
                                 rows="1"
                                 style={{ minHeight: '44px', maxHeight: '120px' }}
                                 disabled={sending}
@@ -559,10 +594,10 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
                         <button
                             onClick={() => handleSendMessage()}
                             disabled={sending || !newMessage.trim()}
-                            className="p-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            className="w-12 h-12 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center"
                         >
                             {sending ? (
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             ) : (
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -588,154 +623,129 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
                 />
             )}
 
-            {/* Order Details Modal */}
-            {showOrderDetails && orderDetails && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 bg-neutral-800 bg opacity-90">
-                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-emerald-900">Order Details</h3>
+            {/* Order Details Modal - Mobile Optimized */}
+            {showOrderDetails && (
+                <div className="fixed inset-0 flex items-end justify-center z-50 bg-black/50">
+                    <div className="bg-white rounded-t-2xl w-full max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-emerald-900">Chat Options</h3>
                                 <button
                                     onClick={() => setShowOrderDetails(false)}
-                                    className="text-gray-400 hover:text-gray-600 transition"
+                                    className="p-2 text-gray-400 hover:text-gray-600 transition rounded-full hover:bg-gray-100"
                                 >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Product Information */}
-                                <div className="space-y-4">
-                                    <h4 className="font-semibold text-emerald-800 border-b border-emerald-200 pb-2">Product Information</h4>
-                                    
-                                    <div className="flex items-start gap-4">
+                        </div>
+
+                        <div className="p-4 space-y-4">
+                            {/* Order Details Section */}
+                            {orderDetails && chat.orderId && (
+                                <div className="bg-emerald-50 rounded-xl p-4">
+                                    <h4 className="font-semibold text-emerald-900 mb-3 flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Order Details
+                                    </h4>
+
+                                    {/* Product Info */}
+                                    <div className="flex items-center gap-3 mb-4">
                                         <img
                                             src={orderDetails.productDetails?.image?.[0] || '/placeholder-product.png'}
                                             alt={orderDetails.productDetails?.name}
-                                            className="w-20 h-20 rounded-lg object-cover border-2 border-emerald-200 cursor-pointer hover:border-emerald-400 transition-colors"
-                                            onClick={() => handleProductImageClick(chat.productId?._id, chat.productId?.name)}
-                                            title="Click to view product details"
+                                            className="w-16 h-16 rounded-lg object-cover border-2 border-emerald-200"
                                         />
-                                        <div className="flex-1">
-                                            <h5 className="font-medium text-emerald-900">{orderDetails.productDetails?.name}</h5>
-                                            <p className="text-sm text-emerald-600 mt-1">{orderDetails.productDetails?.category}</p>
-                                            <p className="text-xs text-emerald-500 mt-2 line-clamp-2">{orderDetails.productDetails?.description}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-emerald-900 truncate">{orderDetails.productDetails?.name}</p>
+                                            <p className="text-sm text-emerald-600">Qty: {orderDetails.quantity || 1}</p>
+                                            <p className="text-sm font-semibold text-emerald-800">{DisplayPriceInRupees(orderDetails.totalAmount)}</p>
                                         </div>
                                     </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <span className="text-emerald-500">Quantity:</span>
-                                            <p className="font-medium text-emerald-900">{orderDetails.quantity || 1}</p>
+
+                                    {/* Order Info Grid */}
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div className="bg-white rounded-lg p-3">
+                                            <p className="text-emerald-600 font-medium">Order ID</p>
+                                            <p className="text-emerald-900 text-xs font-mono">{orderDetails.orderId}</p>
                                         </div>
-                                        <div>
-                                            <span className="text-emerald-500">Unit Price:</span>
-                                            <p className="font-medium text-emerald-900">{DisplayPriceInRupees(orderDetails.productDetails?.price)}</p>
-                                        </div>
-                                        <div>
-                                            <span className="text-emerald-500">Total Amount:</span>
-                                            <p className="font-bold text-emerald-900">{DisplayPriceInRupees(orderDetails.totalAmount)}</p>
-                                        </div>
-                                        <div>
-                                            <span className="text-emerald-500">Payment Status:</span>
-                                            <p className={`font-medium ${orderDetails.payment_status === 'paid' ? 'text-green-600' : 'text-orange-600'}`}>
-                                                {orderDetails.payment_status === 'paid' ? 'Paid' : 'Pending'}
+                                        <div className="bg-white rounded-lg p-3">
+                                            <p className="text-emerald-600 font-medium">Status</p>
+                                            <p className={`text-xs font-medium ${
+                                                chat.orderCompleted ? 'text-green-600' : 
+                                                chat.orderConfirmed ? 'text-blue-600' : 'text-orange-600'
+                                            }`}>
+                                                {chat.orderCompleted ? 'Completed' : chat.orderConfirmed ? 'Confirmed' : 'Pending'}
                                             </p>
                                         </div>
+                                        <div className="bg-white rounded-lg p-3">
+                                            <p className="text-emerald-600 font-medium">Customer</p>
+                                            <p className="text-emerald-900 text-xs truncate">{orderDetails.userId?.name}</p>
+                                        </div>
+                                        <div className="bg-white rounded-lg p-3">
+                                            <p className="text-emerald-600 font-medium">Date</p>
+                                            <p className="text-emerald-900 text-xs">{new Date(orderDetails.createdAt).toLocaleDateString()}</p>
+                                        </div>
                                     </div>
                                 </div>
-                                
-                                {/* Order & Customer Information */}
-                                <div className="space-y-4">
-                                    <h4 className="font-semibold text-emerald-800 border-b border-emerald-200 pb-2">Order Information</h4>
-                                    
-                                    <div className="space-y-3 text-sm">
-                                        <div>
-                                            <span className="text-emerald-500">Order ID:</span>
-                                            <p className="font-mono text-emerald-900 text-xs bg-emerald-50 px-2 py-1 rounded mt-1">{orderDetails.orderId}</p>
-                                        </div>
-                                        
-                                        <div>
-                                            <span className="text-emerald-500">Order Date:</span>
-                                            <p className="text-emerald-900">{new Date(orderDetails.createdAt).toLocaleDateString('en-IN', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}</p>
-                                        </div>
-                                        
-                                        <div>
-                                            <span className="text-emerald-500">Customer:</span>
-                                            <p className="font-medium text-emerald-900">{orderDetails.userId?.name}</p>
-                                            <p className="text-emerald-600">{orderDetails.userId?.email}</p>
-                                        </div>
-                                        
-                                        {orderDetails.delivery_address && (
-                                            <div>
-                                                <span className="text-emerald-500">Delivery Address:</span>
-                                                <div className="bg-emerald-50 p-3 rounded-lg mt-1">
-                                                    <p className="text-emerald-900 text-xs leading-relaxed">
-                                                        {orderDetails.delivery_address.address_line_1}<br/>
-                                                        {orderDetails.delivery_address.address_line_2 && (
-                                                            <>{orderDetails.delivery_address.address_line_2}<br/></>
-                                                        )}
-                                                        {orderDetails.delivery_address.city}, {orderDetails.delivery_address.state}<br/>
-                                                        {orderDetails.delivery_address.pincode}, {orderDetails.delivery_address.country}
-                                                    </p>
-                                                </div>
-                                            </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="space-y-3">
+                                {/* Order Actions */}
+                                {chat.orderId && !chat.orderCompleted && (
+                                    <>
+                                        {isSeller && !chat.orderConfirmed && (
+                                            <button
+                                                onClick={handleConfirmOrder}
+                                                className="w-full p-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition font-medium"
+                                                disabled={confirmingOrder}
+                                            >
+                                                {confirmingOrder ? 'Confirming Order...' : 'Confirm Order'}
+                                            </button>
                                         )}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {/* Order Status */}
-                            <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-lime-50 rounded-lg">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h5 className="font-semibold text-emerald-900">Order Status</h5>
-                                        <div className="flex items-center gap-2 mt-2">
-                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                                chat.orderCompleted 
-                                                    ? 'bg-green-100 text-green-700' 
-                                                    : chat.orderConfirmed
-                                                        ? 'bg-blue-100 text-blue-700'
-                                                        : 'bg-orange-100 text-orange-700'
-                                            }`}>
-                                                {chat.orderCompleted ? 'Order Completed' : chat.orderConfirmed ? 'Order Confirmed' : 'Awaiting Confirmation'}
-                                            </span>
-                                            
-                                            {chat.orderConfirmed && chat.orderConfirmedAt && (
-                                                <span className="text-xs text-emerald-600">
-                                                    Confirmed on {new Date(chat.orderConfirmedAt).toLocaleDateString()}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Action Buttons */}
-                                    {isSeller && !chat.orderCompleted && !chat.orderConfirmed && (
-                                        <button
-                                            onClick={handleConfirmOrder}
-                                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
-                                            disabled={confirmingOrder}
-                                        >
-                                            {confirmingOrder ? 'Confirming...' : 'Confirm Order'}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            <div className="flex gap-3 mt-6">
+                                        {isBuyer && chat.orderConfirmed && (
+                                            <button
+                                                onClick={handleCompleteOrder}
+                                                className="w-full p-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition font-medium"
+                                            >
+                                                Complete Order
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Product Link */}
                                 <button
-                                    onClick={() => setShowOrderDetails(false)}
-                                    className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition"
+                                    onClick={() => {
+                                        handleProductImageClick(chat.productId?._id, chat.productId?.name);
+                                        setShowOrderDetails(false);
+                                    }}
+                                    className="w-full p-4 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition font-medium flex items-center justify-center gap-2"
                                 >
-                                    Close
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    View Product Details
+                                </button>
+
+                                {/* Delete Chat */}
+                                <button
+                                    onClick={() => {
+                                        setShowOrderDetails(false);
+                                        handleDeleteChat();
+                                    }}
+                                    className="w-full p-4 bg-red-500 text-white rounded-xl hover:bg-red-600 transition font-medium flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Delete Chat
                                 </button>
                             </div>
                         </div>
@@ -770,6 +780,21 @@ const ChatWindow = ({ chat, user, onChatUpdate }) => {
                     cancel={cancelCompleteOrder}
                     confirm={confirmCompleteOrder}
                     close={cancelCompleteOrder}
+                />
+            )}
+
+            {/* Confirm Order Confirmation Modal */}
+            {showConfirmOrderConfirm && (
+                <ConfirmBox
+                    title="Confirm Order"
+                    message="Are you sure you want to confirm this order? The buyer will be notified and can now proceed with the order."
+                    confirmText="Yes, Confirm Order"
+                    cancelText="Cancel"
+                    confirmButtonClass="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                    cancelButtonClass="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
+                    cancel={() => setShowConfirmOrderConfirm(false)}
+                    confirm={confirmConfirmOrder}
+                    close={() => setShowConfirmOrderConfirm(false)}
                 />
             )}
 

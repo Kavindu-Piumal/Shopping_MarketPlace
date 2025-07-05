@@ -1,23 +1,23 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, shallowEqual } from "react-redux";
-import { FaCartPlus, FaStore, FaBell } from "react-icons/fa";
+import { FaCartPlus, FaStore } from "react-icons/fa";
 import { GoTriangleDown, GoTriangleUp } from "react-icons/go";
 
-import react from "../assets/react.svg";
+import  dp from "../assets/dp.jpg";
 import Search from "./Search";
 import UserMenu from "./UserMenu";
 import DisplayCartItem from "./DisplayCartItem";
-import NotificationsMenu from "./NotificationsMenu";
+import NotificationPanel from "./NotificationPanel.jsx";
 import { DisplayPriceInRupees } from "../utils/displaypriceinrupees";
 import { useGlobalcontext } from "../provider/globaleProvider";
 import useMobile from "../hooks/useMobile";
 import { useAuthContext } from "../context/AuthContext";
-import { useNotifications } from "../hooks/useNotifications";
 
 /**
  * 🎯 ENTERPRISE: Zero-unnecessary-calls Header Component
  * Professional authentication handling with lazy loading
+ * Enhanced desktop UX with improved navigation and visual hierarchy
  */
 const Header = React.memo(() => {
   const [isMobile] = useMobile();
@@ -34,22 +34,14 @@ const Header = React.memo(() => {
   );
 
   const { totalPrice, totalQty } = useGlobalcontext();
-  const { checkAuth } = useAuthContext();
-  const { unreadCount } = useNotifications();
 
   // 🎯 PROFESSIONAL: State management
   const [openUserMenu, setOpenUserMenu] = useState(false);
   const [openCartSection, setOpenCartSection] = useState(false);
-  const [openNotifications, setOpenNotifications] = useState(false);
   const userMenuRef = useRef(null);
-  const desktopNotificationsRef = useRef(null);
-  const mobileNotificationsRef = useRef(null);
   const cartRef = useRef(null);
   const cartButtonRef = useRef(null);
 
-  // 🔥 PERFORMANCE: Memoized computations
-  const isSearchPage = useMemo(() => location.pathname === "/search", [location.pathname]);
-  
   // 🎯 SMART: Determine if search bar should be visible based on current route
   const shouldShowSearch = useMemo(() => {
     const path = location.pathname;
@@ -92,21 +84,9 @@ const Header = React.memo(() => {
     return isProductPage && !isDashboardPage;
   }, [location.pathname]);
   
-  const cartDisplay = useMemo(() => {
-    if (!cartItem?.length) return "My Cart";
-    
-    return (
-      <div className="text-left">
-        <p>{totalQty} Items</p>
-        <p>{DisplayPriceInRupees(totalPrice)}</p>
-      </div>
-    );
-  }, [cartItem, totalQty, totalPrice]);
-
   // Close user menu when route changes
   useEffect(() => {
     setOpenUserMenu(false);
-    setOpenNotifications(false);
     setOpenCartSection(false); // Also close cart when route changes
   }, [location.pathname]);
 
@@ -118,12 +98,6 @@ const Header = React.memo(() => {
         setOpenUserMenu(false);
       }
       
-      // For desktop notifications
-      if (desktopNotificationsRef.current && !desktopNotificationsRef.current.contains(event.target) &&
-          mobileNotificationsRef.current && !mobileNotificationsRef.current.contains(event.target)) {
-        setOpenNotifications(false);
-      }
-      
       // For cart - exclude the cart button from closing the cart
       if (cartRef.current && !cartRef.current.contains(event.target) && 
           cartButtonRef.current && !cartButtonRef.current.contains(event.target)) {
@@ -131,21 +105,15 @@ const Header = React.memo(() => {
       }
     };
 
-    if (openUserMenu || openNotifications || openCartSection) {
+    if (openUserMenu || openCartSection) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [openUserMenu, openNotifications, openCartSection]);
+  }, [openUserMenu, openCartSection]);
 
-  // Simple handlers for opening cart and notifications
+  // Simple handlers for opening cart
   const handleCartToggle = () => {
-    setOpenNotifications(false); // Close notifications when opening cart
     setOpenCartSection(!openCartSection);
-  };
-
-  const handleNotificationsToggle = () => {
-    setOpenCartSection(false); // Close cart when opening notifications
-    setOpenNotifications(!openNotifications);
   };
 
   const redirectToLoginpage = () => {
@@ -156,10 +124,6 @@ const Header = React.memo(() => {
     setOpenUserMenu(false);
   };
 
-  const handleCloseNotifications = () => {
-    setOpenNotifications(false);
-  };
-
   const handleCloseCart = () => {
     setOpenCartSection(false);
   };
@@ -167,18 +131,18 @@ const Header = React.memo(() => {
   return (
     <header className="h-16 lg:h-20 shadow-eco fixed left-0 right-0 z-50 bg-eco/90 backdrop-blur-md border-b border-emerald-100" style={{ top: 0, margin: 0, padding: 0 }}>
       <div className="h-full container mx-auto flex items-center px-2 lg:px-4 justify-between gap-2 lg:gap-4">
-        {/* logo */}
+        {/* Logo section with improved visibility */}
         <div className="h-full flex items-center">
           <Link to={"/"} onClick={handleCloseUserMenu} className="h-full flex justify-center items-center gap-1 lg:gap-2">
             <img
-              src={react}
+              src={dp}
               alt="logo"
               height={170}
               width={60}
               className="hidden lg:block drop-shadow-md"
             />
             <img
-              src={react}
+              src={dp}
               alt="logo"
               height={170}
               width={40}
@@ -188,50 +152,51 @@ const Header = React.memo(() => {
           </Link>
         </div>
 
-        {/* Middle section - flexible layout based on search visibility */}
-        <div className={`hidden lg:flex items-center gap-6 ${shouldShowSearch ? 'flex-1 justify-between' : 'justify-center'}`}>
-          {/* Shop Link */}
-          <Link
-            to="/shops"
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium"
-          >
-            <FaStore size={18} />
-            <span>Shops</span>
-          </Link>
+        {/* Main navigation - enhanced for desktop */}
+        <div className="hidden lg:flex flex-1 items-center justify-between max-w-4xl mx-auto">
+          {/* Primary navigation links with visual cues */}
+          <nav className="flex items-center gap-8">
+            <Link
+              to="/"
+              className={`font-medium text-base hover:text-emerald-700 transition-colors ${
+                location.pathname === '/' ? 'text-emerald-700 font-semibold' : 'text-gray-700'
+              }`}
+            >
+              Home
+            </Link>
+            <Link
+              to="/shops"
+              className={`flex items-center gap-2 font-medium text-base hover:text-emerald-700 transition-colors ${
+                location.pathname.includes('/shop') ? 'text-emerald-700 font-semibold' : 'text-gray-700'
+              }`}
+            >
+              <FaStore size={16} />
+              <span>Shops</span>
+            </Link>
+            <Link
+              to="/hot-deals"
+              className={`font-medium text-base hover:text-emerald-700 transition-colors ${
+                location.pathname.includes('/hot-deals') ? 'text-emerald-700 font-semibold' : 'text-gray-700'
+              }`}
+            >
+              Hot Deals
+            </Link>
+          </nav>
 
-          {/* search - only show on product-related pages */}
+          {/* search - with improved positioning and visibility */}
           {shouldShowSearch && (
-            <div className="w-full max-w-lg mx-8">
+            <div className="w-full max-w-md">
               <Search />
             </div>
           )}
         </div>
 
-        {/*login and add to cart */}
-        <div className="flex items-center gap-4">
+        {/* Right section - user actions */}
+        <div className="flex items-center gap-3 lg:gap-5">
           {/* Mobile Notifications Button - only for authenticated users */}
           {user?._id && (
-            <div className="relative lg:hidden" ref={mobileNotificationsRef}>
-              <button
-                onClick={handleNotificationsToggle}
-                className="text-emerald-700 bg-emerald-100 hover:bg-emerald-200 p-2 rounded-full transition-colors relative"
-                aria-label="Notifications"
-              >
-                <FaBell size={22} />
-                {/* Notification Badge for mobile */}
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </button>
-              {openNotifications && (
-                <div className="absolute right-0 top-12 z-50 w-80 max-w-[calc(100vw-2rem)]">
-                  <div className="bg-white rounded-lg shadow-eco border border-gray-200 p-4">
-                    <NotificationsMenu close={handleCloseNotifications} />
-                  </div>
-                </div>
-              )}
+            <div className="lg:hidden">
+              <NotificationPanel isMobile={true} />
             </div>
           )}
 
@@ -246,51 +211,33 @@ const Header = React.memo(() => {
             </button>
           )}
 
-          {/* Desktop Only */}
-          <div className="hidden lg:flex items-center gap-8">
+          {/* Desktop Only - enhanced layout */}
+          <div className="hidden lg:flex items-center gap-4">
             {/* Notifications - only for authenticated users */}
             {user?._id && (
-              <div className="relative" ref={desktopNotificationsRef}>
-                <button
-                  onClick={handleNotificationsToggle}
-                  className="flex items-center gap-2 text-emerald-700 hover:text-emerald-900 p-2 rounded-full hover:bg-emerald-50 transition-all duration-200 relative"
-                  aria-label="Notifications"
-                >
-                  <FaBell size={20} />
-                  {/* Notification Badge - dynamic count */}
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-                {openNotifications && (
-                  <div className="absolute right-0 top-12 z-50">
-                    <div className="bg-white rounded-lg shadow-eco border border-gray-200 p-4">
-                      <NotificationsMenu close={handleCloseNotifications} />
-                    </div>
-                  </div>
-                )}
-              </div>
+              <NotificationPanel isMobile={false} />
             )}
 
-            {/* User Account */}
+            {/* User Account - improved visibility */}
             {user?._id ? (
               <div className="relative" ref={userMenuRef}>
                 <div
-                  onClick={() => setOpenUserMenu((preve) => !preve)}
-                  className="flex select-none items-center gap-2 cursor-pointer text-emerald-700 hover:text-emerald-900 font-semibold"
+                  onClick={() => setOpenUserMenu((prev) => !prev)}
+                  className="flex select-none items-center gap-2 cursor-pointer bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-lg text-emerald-700 hover:text-emerald-900 font-medium transition-colors"
                 >
-                  <p>Account</p>
-                  {openUserMenu ? (
-                    <GoTriangleUp size={20} />
-                  ) : (
-                    <GoTriangleDown size={20} />
-                  )}
+                  <span className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-700 font-semibold text-sm overflow-hidden">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      user.name?.charAt(0).toUpperCase()
+                    )}
+                  </span>
+                  <p className="max-w-[100px] truncate">{user.name}</p>
+                  {openUserMenu ? <GoTriangleUp size={16} /> : <GoTriangleDown size={16} />}
                 </div>
                 {openUserMenu && (
-                  <div className="absolute right-0 top-15 z-50">
-                    <div className="bg-white rounded shadow-eco p-4 min-w-52">
+                  <div className="absolute right-0 top-12 z-50">
+                    <div className="bg-white rounded-lg shadow-eco p-4 min-w-52">
                       <UserMenu close={handleCloseUserMenu} />
                     </div>
                   </div>
@@ -298,24 +245,36 @@ const Header = React.memo(() => {
               </div>
             ) : (
               location.pathname !== '/login' && (
-                <button onClick={redirectToLoginpage} className="text-lg px-4 py-2 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold transition-colors">Login</button>
+                <button
+                  onClick={redirectToLoginpage}
+                  className="px-4 py-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-medium transition-colors flex items-center gap-2"
+                >
+                  <span>Login</span>
+                </button>
               )
             )}
-            <button 
+
+            {/* Cart button - with improved visual feedback */}
+            <button
               onClick={handleCartToggle}
-              className="flex items-center gap-2 btn-eco px-3 py-2 text-base min-w-[120px] lg:min-w-[140px] justify-center"
-              style={{ zIndex: 10 }} // Ensure button is clickable
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                openCartSection 
+                  ? 'bg-emerald-700 text-white' 
+                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
+              }`}
               ref={cartButtonRef}
             >
-              <FaCartPlus size={20} className="flex-shrink-0" />
-              <div className="font-semibold text-white text-center text-sm">
+              <FaCartPlus size={18} className="flex-shrink-0" />
+              <div className="font-medium text-center">
                 {cartItem[0] ? (
-                  <div className="leading-tight">
-                    <p className="text-xs">{totalQty} Items</p>
-                    <p className="text-sm">{DisplayPriceInRupees(totalPrice)}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-white text-emerald-700 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {totalQty}
+                    </span>
+                    <span>{DisplayPriceInRupees(totalPrice)}</span>
                   </div>
                 ) : (
-                  <span className="text-sm">My Cart</span>
+                  <span>Cart</span>
                 )}
               </div>
             </button>
@@ -332,6 +291,7 @@ const Header = React.memo(() => {
         </div>
       )}
       
+      {/* Cart dropdown with enhanced styling */}
       {openCartSection && (
         <div className="absolute right-4 top-20 z-50" ref={cartRef}>
           <DisplayCartItem close={handleCloseCart}/>

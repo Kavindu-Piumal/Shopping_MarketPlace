@@ -96,14 +96,28 @@ io.on('connection', (socket) => {
         console.log(`Socket ${socket.id} joined chat-${chatId}`);
     });    // Handle sending messages
     socket.on('send-message', (data) => {
+        console.log('🔔 Backend received send-message:', data); // Debug log
         const { chatId, receiverId, message } = data;
         
-        // Emit to chat room only
-        // This ensures the message is only received once
-        socket.to(`chat-${chatId}`).emit('new-message', message);
-        
-        // No need to emit to personal room as well
-        // This was causing the duplicate messages
+        if (!chatId || !message) {
+            console.log('❌ Missing chatId or message data:', { chatId, message: !!message });
+            return;
+        }
+
+        console.log(`📤 Emitting to chat room: chat-${chatId}`);
+        console.log(`👥 Message content: "${message.content}"`);
+
+        // Emit to chat room - this will reach all users in this chat
+        const emitData = {
+            chatId,
+            message,
+            receiverId
+        };
+
+        socket.to(`chat-${chatId}`).emit('new-message', emitData);
+
+        console.log(`✅ Message sent to chat-${chatId}:`, message.content);
+        console.log(`🎯 Target receiver:`, receiverId);
     });
 
     // Handle typing indicators
@@ -163,11 +177,3 @@ connectDB().then(() => {
         console.log(`Server is running on port ${PORT}`);
     });
 });
-
-
-
-
-
-
-
-

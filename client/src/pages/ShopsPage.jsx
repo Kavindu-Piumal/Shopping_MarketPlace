@@ -224,11 +224,6 @@ const ShopsPage = () => {
             <h3 className="text-xl font-bold text-gray-800 mb-1">{shop.name}</h3>
             <p className="text-emerald-600 text-sm font-medium">{shop.category}</p>
             <div className="flex items-center gap-2 mt-2">
-              <div className="flex items-center gap-1">
-                <FaStar className="text-yellow-400 text-sm" />
-                <span className="text-sm text-gray-600">{shop.rating.toFixed(1)}</span>
-                <span className="text-xs text-gray-500">({shop.totalReviews} reviews)</span>
-              </div>
               {shop.verified && (
                 <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">✓ Verified</span>
               )}

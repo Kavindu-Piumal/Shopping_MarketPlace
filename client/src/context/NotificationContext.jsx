@@ -130,6 +130,16 @@ export const NotificationProvider = ({ children }) => {
   const showCustom = useCallback((config) => {
     return addNotification(config);
   }, [addNotification]);
+
+  // Axios error handler for consistent error display
+  const axiosNotificationError = useCallback((error) => {
+    const errorMessage = error?.response?.data?.message ||
+                        error?.message ||
+                        'An unexpected error occurred';
+
+    return showError(errorMessage);
+  }, [showError]);
+
   const value = {
     notifications: state.notifications,
     addNotification,
@@ -140,7 +150,8 @@ export const NotificationProvider = ({ children }) => {
     showError,
     showWarning,
     showInfo,
-    showCustom
+    showCustom,
+    axiosNotificationError
   };
 
   return (

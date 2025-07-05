@@ -130,7 +130,8 @@ const ProductAdmin = () => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center justify-between mt-8 gap-4">
+        {/* Pagination - Hidden on mobile, visible on md screens and up */}
+        <div className="hidden md:flex md:flex-row items-center justify-between mt-8 gap-4">
           <button
             onClick={handlePrevious}
             className="px-6 py-2 rounded-lg border border-emerald-300 bg-white hover:bg-emerald-100 text-emerald-700 font-semibold shadow-sm transition"

@@ -1,8 +1,13 @@
 import { Router } from "express";
 import auth from "../middleware/auth.js";
 import {
-    addReviewController,
+    getReviewEligibleProductsController,
+    checkReviewEligibilityController,
+    createReviewController,
+    declineReviewPromptController,
+    markReviewPromptShownController,
     getProductReviewsController,
+    addReviewController,
     canUserReviewController,
     updateReviewController,
     deleteReviewController
@@ -10,19 +15,34 @@ import {
 
 const reviewRouter = Router();
 
-// Add a review (authenticated users only)
-reviewRouter.post("/add", auth, addReviewController);
+// Get all products user is eligible to review
+reviewRouter.get("/eligible-products", auth, getReviewEligibleProductsController);
 
-// Get reviews for a product (public)
+// Check if user can review specific product
+reviewRouter.get("/check-eligibility/:productId/:orderId", auth, checkReviewEligibilityController);
+
+// Create a review
+reviewRouter.post("/create", auth, createReviewController);
+
+// Decline review prompt (user can still review later)
+reviewRouter.post("/decline-prompt", auth, declineReviewPromptController);
+
+// Mark review prompt as shown
+reviewRouter.post("/mark-prompt-shown", auth, markReviewPromptShownController);
+
+// Get product reviews and statistics (this is what CardProduct.jsx is trying to call)
 reviewRouter.get("/product/:productId", getProductReviewsController);
 
-// Check if user can review a product (authenticated users only)
+// Add a review (for the new chat system)
+reviewRouter.post("/add", auth, addReviewController);
+
+// Check if user can review a product
 reviewRouter.get("/can-review/:productId", auth, canUserReviewController);
 
-// Update a review (authenticated users only)
+// Update a review - Explicitly defined with correct parameter
 reviewRouter.put("/update/:reviewId", auth, updateReviewController);
 
-// Delete a review (authenticated users only)
+// Delete a review
 reviewRouter.delete("/delete/:reviewId", auth, deleteReviewController);
 
 export default reviewRouter;

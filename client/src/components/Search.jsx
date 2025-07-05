@@ -42,21 +42,17 @@ const Search = () => {
 
   return (
     <div className='w-full  min-w-[300px] lg:min-w-[420px] h-11 lg:h-12 rounded-lg border overflow-hidden flex items-center text-neutral-500 bg-slate-50 group  focus-within:border-green-400'>
-        <div>
-            {
-                    (isMobile && isSearchPage) ? (
-                        <Link to={'/'} className='flex justify-center h-full p-3.5 m-1 group-focus-within:text-green-400 bg-white rounded-full shadow-md'>
-                            <FaArrowLeft size={20}/>
-                        </Link>
-                    ):(
-                        <button className='flex justify-center h-full p-3.5 group-focus-within:text-green-400'>
-                            <IoSearch size={22}/> 
-                        </button>
-                
-                    )
-                
-            }
-        </div>
+        {
+            (isMobile && isSearchPage) ? (
+                <Link to={'/'} className='flex justify-center h-full p-3.5 m-1 group-focus-within:text-green-400 bg-white rounded-full shadow-md'>
+                    <FaArrowLeft size={20}/>
+                </Link>
+            ):(
+                <button className='flex justify-center h-full p-3.5 group-focus-within:text-green-400'>
+                    <IoSearch size={22}/>
+                </button>
+            )
+        }
 
         <div className='w-full '>
             {
@@ -76,23 +72,17 @@ const Search = () => {
                 </div>
 
                 ):(
-                    <div className='w-full '>
-                        <input 
-                             type="text"
-                             placeholder='Search for products, categories, brands'
-                             autoFocus
-                             defaultValue={searchText || ''}
-                             className='w-full h-full p-3.5 outline-none bg-slate-50'
-                             onChange={handleOnChange}
-                             />
-                    </div>
-
+                    <input
+                         type="text"
+                         placeholder='Search for products, categories, brands'
+                         autoFocus
+                         defaultValue={searchText || ''}
+                         className='w-full h-full p-3.5 outline-none bg-slate-50'
+                         onChange={handleOnChange}
+                         />
                 )
             }
         </div>
-
-        
-        
     </div>
   )
 }

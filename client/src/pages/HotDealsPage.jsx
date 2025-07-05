@@ -84,9 +84,15 @@ const HotDealsPage = () => {
 
   // Filter handlers
   const handleDiscountFilter = (minDiscount) => {
+    // Only scroll to top if user is actually changing filters (not initial load)
+    const isFilterChange = filters.minDiscount !== minDiscount;
+
     setFilters(prev => ({ ...prev, minDiscount }));
-    // Scroll to top when filter changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Only scroll to top if it's an actual filter change by user
+    if (isFilterChange && hotDeals.length > 0) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Scroll to top function

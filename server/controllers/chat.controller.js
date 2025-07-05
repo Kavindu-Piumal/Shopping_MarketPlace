@@ -181,19 +181,31 @@ export const sendMessageController = async (req, res) => {
 
         console.log(`💬 sendMessage - senderId: ${senderId}, receiverId: ${receiverId}, chatId: ${chatId}`);
 
-        // Verify chat exists and user is part of it
+        // Verify chat exists and user is part of it - ALLOW messaging after completion
         const chat = await ChatModel.findOne({
             _id: chatId,
             $or: [
                 { buyerId: senderId },
                 { sellerId: senderId }
-            ],
-            isActive: true
+            ]
+            // Removed isActive: true restriction to allow post-completion messaging
         });
 
         if (!chat) {
             return res.status(404).json({
                 message: "Chat not found or access denied",
+                error: true,
+                success: false
+            });
+        }
+
+        // Check if chat was deleted by this user
+        const isBuyer = chat.buyerId.toString() === senderId;
+        const isSeller = chat.sellerId.toString() === senderId;
+
+        if ((isBuyer && chat.deletedByBuyer) || (isSeller && chat.deletedBySeller)) {
+            return res.status(403).json({
+                message: "You cannot send messages to a deleted chat",
                 error: true,
                 success: false
             });
@@ -322,35 +334,74 @@ export const getChatMessagesController = async (req, res) => {
     }
 };
 
-// Complete order and end chat
+// Complete order and end chat - BUYER ONLY
 export const completeOrderController = async (req, res) => {
     try {
         const { chatId } = req.body;
         const userId = req.userId;
 
-        // Verify chat exists and user is the buyer
+        // Verify chat exists and user is the buyer - STRICT BUYER CHECK
         const chat = await ChatModel.findOne({
             _id: chatId,
-            buyerId: userId,
-            isActive: true
-        });
+            buyerId: userId  // ONLY the buyer can complete orders
+        }).populate('orderId').populate('productId');
 
         if (!chat) {
             return res.status(404).json({
-                message: "Chat not found or you don't have permission to complete this order",
+                message: "Chat not found or you are not authorized to complete this order. Only buyers can complete orders.",
                 error: true,
                 success: false
             });
-        }        // Update chat as completed
+        }
+
+        // Additional validation - make sure user is definitely the buyer
+        if (chat.buyerId.toString() !== userId) {
+            return res.status(403).json({
+                message: "Access denied. Only the buyer can complete this order.",
+                error: true,
+                success: false
+            });
+        }
+
+        // Check if order is confirmed by seller first
+        if (!chat.orderConfirmed) {
+            return res.status(400).json({
+                message: "Order must be confirmed by the seller before completion",
+                error: true,
+                success: false
+            });
+        }
+
+        // Update chat as completed - KEEP CHAT ACTIVE for continued communication
         const updatedChat = await ChatModel.findByIdAndUpdate(
             chatId,
             {
                 orderCompleted: true,
-                completedAt: new Date(),
-                isActive: false
+                completedAt: new Date()
+                // Removed isActive: false to keep chat visible and allow continued messaging
             },
             { new: true }
         );
+
+        // CREATE REVIEW ELIGIBILITY RECORD - Only for buyers who complete orders
+        try {
+            const { default: ReviewEligibilityModel } = await import('../models/reviewEligibility.model.js');
+
+            const reviewEligibility = new ReviewEligibilityModel({
+                userId: userId, // This is the buyer
+                productId: chat.productId._id,
+                orderId: chat.orderId._id,
+                chatId: chatId,
+                orderCompletedAt: new Date(),
+                hasReviewed: false,
+                reviewPromptShown: false
+            });
+
+            await reviewEligibility.save();
+            console.log(`✅ Created review eligibility for BUYER ${userId} for product ${chat.productId._id}`);
+        } catch (error) {
+            console.error('💥 Error creating review eligibility:', error);
+        }
 
         // Emit real-time order completion update
         if (req.io) {
@@ -545,17 +596,76 @@ export const confirmOrderController = async (req, res) => {
             messageType: "system",
             content: encryptMessage(`Order confirmed! Your order for ${chat.productId.name} has been confirmed by the seller.`),
             isRead: false
-        });        await systemMessage.save();
+        });
 
-        // Emit real-time order status update
+        await systemMessage.save();
+
+        // Populate the system message for notification
+        const populatedSystemMessage = await MessageModel.findById(systemMessage._id)
+            .populate('senderId', 'name')
+            .populate('receiverId', 'name');
+
+        // Decrypt the system message content for notification
+        const decryptedContent = decryptMessage(populatedSystemMessage.content);
+
+        // Emit the system message via socket for real-time delivery - MULTIPLE CHANNELS
         if (req.io) {
-            req.io.to(`chat-${chatId}`).emit('order-status-update', {
+            // Emit to the specific chat room
+            req.io.to(`chat-${chatId}`).emit('new-message', {
+                ...populatedSystemMessage.toObject(),
+                content: decryptedContent
+            });
+
+            // ALSO emit directly to the buyer's personal room as backup
+            req.io.to(chat.buyerId._id.toString()).emit('new-message', {
+                ...populatedSystemMessage.toObject(),
+                content: decryptedContent
+            });
+
+            // Emit order status update to both chat room and buyer's personal room
+            const statusUpdate = {
                 chatId: chatId,
                 orderConfirmed: true,
                 orderConfirmedAt: new Date(),
                 orderCompleted: false,
                 message: 'Order confirmed by seller'
-            });
+            };
+
+            req.io.to(`chat-${chatId}`).emit('order-status-update', statusUpdate);
+            req.io.to(chat.buyerId._id.toString()).emit('order-status-update', statusUpdate);
+        }
+
+        // CREATE NOTIFICATION FOR THE SYSTEM MESSAGE
+        try {
+            await createMessageNotification(
+                chatId,
+                decryptedContent, // Use the actual system message content
+                userId, // seller ID
+                chat.buyerId._id, // buyer ID
+                req.io
+            );
+            console.log(`✅ Created system message notification for buyer ${chat.buyerId._id}`);
+        } catch (error) {
+            console.error('💥 Error creating system message notification:', error);
+        }
+
+        // SEND EMAIL NOTIFICATION TO BUYER - This was missing!
+        try {
+            const { notifyBuyerOrderConfirmed } = await import('../utils/orderNotifications.js');
+            const orderData = {
+                ...chat.orderId.toObject(),
+                userId: chat.buyerId._id,
+                productId: chat.productId._id
+            };
+
+            const emailResult = await notifyBuyerOrderConfirmed(orderData);
+            if (emailResult) {
+                console.log(`✅ Email notification sent to buyer ${chat.buyerId.email}`);
+            } else {
+                console.log(`❌ Failed to send email notification to buyer`);
+            }
+        } catch (error) {
+            console.error('💥 Error sending email notification to buyer:', error);
         }
 
         return res.status(200).json({
