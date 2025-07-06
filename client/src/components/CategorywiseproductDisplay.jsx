@@ -18,6 +18,7 @@ const CategorywiseproductDisplay = ({ id, name }) => {
   const containerRef = useRef();
   const subcategoryData = useSelector((state) => state.product.allSubCategory);
   const { isAuthenticated } = useAuthContext(); // Listen to auth state
+  const userId = useSelector((state) => state.user._id); // Get current user ID
   const navigate = useNavigate();
   const loadingcard = new Array(10).fill(null);
   // Create an array of 10 elements to simulate loading cards
@@ -39,10 +40,12 @@ const CategorywiseproductDisplay = ({ id, name }) => {
       });
 
       const { data: responseData } = response;
-      //console.log("categorywiseProduct API response:", responseData); // <-- Add here
+      // Filter out products uploaded by the current seller
       if (responseData.success) {
-        setData(responseData.data || []);
-        //console.log("categorywiseProduct data set:", responseData.data); // <-- Add here
+        const filteredData = (responseData.data || []).filter(
+          (product) => product.sellerId !== userId
+        );
+        setData(filteredData);
       }    } catch (error) {
       axiosNotificationError(error);
       // Set empty array on error to prevent undefined issues

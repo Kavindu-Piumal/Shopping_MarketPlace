@@ -21,6 +21,7 @@ import shopRouter from './routes/shop.route.js';
 import testRouter from './routes/test.route.js';
 import debugRouter from './routes/debug.route.js';
 import notificationRouter from './routes/notification.route.js';
+import contactRouter from './routes/contact.route.js';
 import { checkShopActivity } from './utils/shopDormancySystem.js';
 
 
@@ -76,6 +77,7 @@ app.use('/api/shop', shopRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/test', testRouter);
 app.use('/api/debug', debugRouter);
+app.use('/api/contact', contactRouter);
 
 // Socket.IO connection handling
 const connectedUsers = new Map();
@@ -96,28 +98,14 @@ io.on('connection', (socket) => {
         console.log(`Socket ${socket.id} joined chat-${chatId}`);
     });    // Handle sending messages
     socket.on('send-message', (data) => {
-        console.log('🔔 Backend received send-message:', data); // Debug log
         const { chatId, receiverId, message } = data;
         
-        if (!chatId || !message) {
-            console.log('❌ Missing chatId or message data:', { chatId, message: !!message });
-            return;
-        }
-
-        console.log(`📤 Emitting to chat room: chat-${chatId}`);
-        console.log(`👥 Message content: "${message.content}"`);
-
-        // Emit to chat room - this will reach all users in this chat
-        const emitData = {
-            chatId,
-            message,
-            receiverId
-        };
-
-        socket.to(`chat-${chatId}`).emit('new-message', emitData);
-
-        console.log(`✅ Message sent to chat-${chatId}:`, message.content);
-        console.log(`🎯 Target receiver:`, receiverId);
+        // Emit to chat room only
+        // This ensures the message is only received once
+        socket.to(`chat-${chatId}`).emit('new-message', message);
+        
+        // No need to emit to personal room as well
+        // This was causing the duplicate messages
     });
 
     // Handle typing indicators

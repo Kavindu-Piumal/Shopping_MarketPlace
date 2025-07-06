@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaStore, FaEdit, FaEye, FaBox, FaStar, FaPlus, FaUsers, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaPause, FaPlay, FaTrash, FaExclamationTriangle, FaUpload } from 'react-icons/fa';
+import { FaStore, FaEdit, FaEye, FaBox, FaPlus, FaUsers, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaPause, FaPlay, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import Axios from '../utils/Axios';
 import summaryApi from '../common/summaryApi';
@@ -419,16 +419,6 @@ const MyShop = () => {
                       {shop.name}
                     </h2>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <span style={{ 
-                        backgroundColor: 'rgba(255,255,255,0.2)', 
-                        padding: '4px 12px', 
-                        borderRadius: '20px', 
-                        color: 'white', 
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}>
-                        {shop.category}
-                      </span>
                       {getStatusBadge(shop.status)}
                       {shop.verified && (
                         <span style={{ 
@@ -479,20 +469,6 @@ const MyShop = () => {
                       {shop.totalProducts || 0}
                     </div>
                     <p className="text-gray-600 text-sm">Products</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 text-2xl font-bold text-yellow-500 mb-1">
-                      <FaStar />
-                      {shop.rating?.toFixed(1) || '0.0'}
-                    </div>
-                    <p className="text-gray-600 text-sm">Rating</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 text-2xl font-bold text-blue-600 mb-1">
-                      <FaUsers />
-                      {shop.totalReviews || 0}
-                    </div>
-                    <p className="text-gray-600 text-sm">Reviews</p>
                   </div>
                 </div>
               </div>

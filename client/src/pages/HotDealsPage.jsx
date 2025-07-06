@@ -101,7 +101,7 @@ const HotDealsPage = () => {
   };
 
   return (
-    <div className="pt-0 lg:pt-20 pb-20 lg:pb-8 min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+    <div className="pt-0 lg:pt-4 pb-20 lg:pb-8 min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
       {/* Mobile-First Header - Non-sticky, scrolls with content */}
       <div className="bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">

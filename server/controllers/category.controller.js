@@ -148,7 +148,7 @@ export const deleteCategoryController = async (req, res) => {
     }).countDocuments()
 
     if (checkSubCategory > 0 || checkProduct > 0) {
-      return res.status(200).json({
+      return res.status(400).json({
         message: "Cannot delete category, it is being used in subcategories or products",
         error: true,
         success: false

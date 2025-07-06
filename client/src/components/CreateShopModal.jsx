@@ -20,37 +20,36 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
         close();
       }
     };
-    
+
     // Add escape key handler
     const handleEscKey = (event) => {
       if (event.key === 'Escape') {
         close();
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscKey);
-    
+
     // Prevent body scrolling when modal is open
     document.body.style.overflow = 'hidden';
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscKey);
       document.body.style.overflow = 'auto';
     };
   }, [close]);
-  
+
   // Initialize form data with existing shop data if editing
   const [formData, setFormData] = useState(() => {
     if (shopData && isEditing) {
       // Convert keywords array to comma-separated string for form
       const keywordsString = shopData.keywords ? shopData.keywords.join(', ') : '';
-      
+
       return {
         name: shopData.name || '',
         description: shopData.description || '',
-        category: shopData.category || '',
         keywords: keywordsString,
         mobile: shopData.mobile || '',
         email: shopData.email || '',
@@ -84,7 +83,6 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
       return {
         name: '',
         description: '',
-        category: '',
         keywords: '',
         mobile: '',
         email: '',
@@ -133,7 +131,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
         url: summaryApi.getShopCategories.url,
         method: summaryApi.getShopCategories.method
       });
-      
+
       if (response.data.success) {
         setShopCategories(response.data.data);
       }
@@ -144,7 +142,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
@@ -281,18 +279,18 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.name.trim() || !formData.category || !formData.mobile.trim()) {
+
+    if (!formData.name.trim() || !formData.mobile.trim()) {
       showSuccess('Please fill in all required fields');
       return;
     }
 
     try {
       setLoading(true);
-      
+
       // Convert keywords string to array
       const keywordsArray = formData.keywords.split(',').map(k => k.trim()).filter(k => k);
-      
+
       const shopData = {
         ...formData,
         keywords: keywordsArray
@@ -320,7 +318,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
         showSuccess(response.data.message);
         onShopCreated && onShopCreated();
         close();
-        
+
         // Reload to update user role (only for create, not for edit)
         if (!isEditing) {
           window.location.reload();
@@ -333,9 +331,9 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
     }
   };
   const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  
+
   return (
-    <section className="fixed inset-0 p-2 bg-neutral-800 bg-opacity-90 flex items-start justify-center overflow-y-auto z-[999]" style={{ backdropFilter: 'blur(5px)' }}>      <div ref={modalRef} className="bg-white max-w-4xl w-full my-8 rounded-xl shadow-2xl">
+    <section className="fixed inset-0 p-2 bg-gray-500 bg-opacity-90 flex items-start justify-center overflow-y-auto z-[999]" style={{ backdropFilter: 'blur(5px)' }}>      <div ref={modalRef} className="bg-white max-w-4xl w-full my-8 rounded-xl shadow-2xl">
         <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <FaStore className="text-green-600" />
@@ -347,7 +345,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
           >
             <IoClose size={24} />
           </button>        </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-8rem)]">
           {/* Basic Information */}
           <div className="bg-gray-50 p-4 rounded-lg">
@@ -366,24 +364,6 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   placeholder="e.g., Green Electronics Store"
                   required
                 />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Shop Category *
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {shopCategories.map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
               </div>
             </div>
 
@@ -424,7 +404,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
               <FaImage className="text-indigo-600" />
               Shop Images
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Logo Upload */}
               <div>
@@ -452,7 +432,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                       <FaStore className="text-2xl text-gray-400" />
                     </div>
                   )}
-                  
+
                   <div>
                     <input
                       ref={logoFileRef}
@@ -511,7 +491,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                       <FaImage className="text-2xl text-gray-400" />
                     </div>
                   )}
-                  
+
                   <div>
                     <input
                       ref={bannerFileRef}
@@ -565,7 +545,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <FaEnvelope className="inline mr-1" />
@@ -601,7 +581,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   placeholder="123 Main Street"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
                 <input
@@ -613,7 +593,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   placeholder="Colombo"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">State/Province</label>
                 <input
@@ -625,7 +605,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   placeholder="Western Province"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code</label>
                 <input
@@ -637,7 +617,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   placeholder="10000"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
                 <input
@@ -710,7 +690,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   placeholder="https://yourshop.com"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
                 <input
@@ -722,7 +702,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   placeholder="https://facebook.com/yourshop"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Instagram</label>
                 <input
@@ -734,7 +714,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                   placeholder="https://instagram.com/yourshop"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Twitter</label>
                 <input
@@ -747,7 +727,7 @@ const CreateShopModal = ({ close, onShopCreated, shopData = null, isEditing = fa
                 />              </div>
             </div>
           </div>
-          
+
           {/* Submit Button */}
           <div className="flex justify-end gap-4 pt-6 border-t sticky bottom-0 bg-white pb-4 px-4">
             <button

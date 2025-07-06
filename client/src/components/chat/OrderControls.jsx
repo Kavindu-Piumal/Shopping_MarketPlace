@@ -13,6 +13,7 @@ import {
     ShoppingBag,
     Truck
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const OrderControls = ({
     conversation,
@@ -25,20 +26,32 @@ const OrderControls = ({
     const [hasReviewed, setHasReviewed] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [actionToConfirm, setActionToConfirm] = useState(null);
+    const [justFinalized, setJustFinalized] = useState(false);
     const user = useSelector(state => state.user);
     const { showSuccess, axiosNotificationError } = useNotification();
+    const navigate = useNavigate();
 
     const isUserBuyer = conversation.buyerId._id === user._id;
     const isUserSeller = conversation.sellerId._id === user._id;
-    const hasOrder = conversation.orderId;
+    const hasOrder = conversation.orderId ? true : false;
 
     // Extract IDs for use throughout the component
     const productId = conversation.productId?._id || conversation.productId;
     const orderId = conversation.orderId?._id || conversation.orderId;
 
-    // Check if user has already reviewed this product
+    // Check if user has already reviewed this product or started the review process
     useEffect(() => {
         if (isUserBuyer && hasOrder && conversation.orderCompleted && productId && orderId) {
+            // First check localStorage to see if user has started the review process
+            const reviewStartedKey = `review_started_${productId}_${orderId}`;
+            const hasStartedReview = localStorage.getItem(reviewStartedKey) === 'true';
+
+            if (hasStartedReview) {
+                setHasReviewed(true);
+                return;
+            }
+
+            // If not in localStorage, check with the API
             const checkReviewStatus = async () => {
                 try {
                     const response = await Axios({
@@ -58,7 +71,7 @@ const OrderControls = ({
 
             checkReviewStatus();
         }
-    }, [isUserBuyer, hasOrder, conversation.orderCompleted, productId, orderId]);
+    }, [isUserBuyer, hasOrder, conversation.orderCompleted, productId, orderId, conversation]);
 
     // Prevent sellers from confirming their own orders
     const canConfirmOrder = isUserSeller && hasOrder && !conversation.orderConfirmed && !isUserBuyer;
@@ -82,47 +95,75 @@ const OrderControls = ({
             if (response.data.success) {
                 showSuccess(successMessage);
 
-                // Handle the updated chat data from backend response
-                if (response.data.data && response.data.data.chat && onUpdate) {
-                    console.log('Updating conversation with backend data:', response.data.data.chat);
-                    onUpdate(response.data.data.chat);
-                } else if (onUpdate) {
-                    // Fallback: trigger a refresh of the conversation
-                    console.log('Triggering conversation refresh');
-                    onUpdate({ ...conversation, needsRefresh: true });
+                // Re-fetch the latest conversation/order data after action
+                if (onUpdate) {
+                    try {
+                        const refreshed = await Axios({
+                            url: `${summaryApi.getUserChats.url}/${conversation._id}`,
+                            method: 'get'
+                        });
+                        if (refreshed.data.success && refreshed.data.data) {
+                            onUpdate(refreshed.data.data);
+                        } else {
+                            // fallback: update with needsRefresh flag
+                            onUpdate({ ...conversation, needsRefresh: true });
+                        }
+                    } catch (refreshErr) {
+                        // fallback: update with needsRefresh flag
+                        onUpdate({ ...conversation, needsRefresh: true });
+                    }
                 }
+                return true;
             }
+            return false; // Return false if not successful
         } catch (error) {
             axiosNotificationError(error);
+            return false; // Return false on error
         } finally {
             setLoading(prev => ({ ...prev, [action]: false }));
         }
     };
 
-    const handleConfirmOrder = () => {
+    const handleConfirmOrder = async () => {
         if (!canConfirmOrder) return;
 
         // Extract the actual order ID - handle both string and object formats
         const orderId = conversation.orderId?._id || conversation.orderId;
 
-        handleAction(
+        const success = await handleAction(
             'confirm',
             `${summaryApi.confirmOrder.url}/${orderId}`,
             'Order confirmed and shipped! Buyer has been notified.'
         );
+
+        // If successful, immediately update the conversation state to hide the button
+        if (success && onUpdate) {
+            // Update the conversation state immediately to reflect the confirmed status
+            onUpdate({
+                ...conversation,
+                orderConfirmed: true,
+                orderConfirmedAt: new Date()
+            });
+            console.log('Order confirmed successfully - button should now disappear');
+        }
     };
 
-    const handleFinalizeOrder = () => {
+    const handleFinalizeOrder = async () => {
         if (!canFinalizeOrder) return;
 
         // Extract the actual order ID - handle both string and object formats
         const orderId = conversation.orderId?._id || conversation.orderId;
 
-        handleAction(
+        const success = await handleAction(
             'finalize',
             `${summaryApi.finalizeOrder?.url || summaryApi.completeOrder?.url}/${orderId}`,
             'Order completed! You can now add a review.'
         );
+
+        if (success) {
+            // Set justFinalized to true after successful finalization
+            setJustFinalized(true);
+        }
     };
 
     const handleDeleteChat = async () => {
@@ -162,8 +203,8 @@ const OrderControls = ({
         const productId = conversation.productId?._id || conversation.productId;
         const orderId = conversation.orderId?._id || conversation.orderId;
 
-        // Navigate to review page with proper IDs
-        window.location.href = `/add-review/${productId}?orderId=${orderId}`;
+        // Use client-side navigation for better UX
+        navigate(`/add-review/${productId}?orderId=${orderId}`);
     };
 
     if (!hasOrder) {
@@ -228,7 +269,7 @@ const OrderControls = ({
                     </button>
                 )}
 
-                {canFinalizeOrder && (
+                {canFinalizeOrder && !justFinalized && (
                     <button
                         onClick={handleFinalizeOrder}
                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm hover:bg-purple-200 transition-colors"
@@ -239,8 +280,9 @@ const OrderControls = ({
                     </button>
                 )}
 
-                {/* Only show Add Review button if user is eligible and hasn't already reviewed */}
-                {isUserBuyer && hasOrder && conversation.orderCompleted && !isUserSeller && !hasReviewed && (
+                {/* Show Add Review button if order is completed and user hasn't reviewed, OR if order was just finalized */}
+                {((isUserBuyer && hasOrder && conversation.orderCompleted && !isUserSeller && !hasReviewed) || 
+                  (isUserBuyer && justFinalized && !hasReviewed)) && (
                     <button
                         onClick={handleAddReview}
                         className="flex items-center gap-1 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg text-sm hover:bg-yellow-200 transition-colors"

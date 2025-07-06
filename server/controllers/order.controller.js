@@ -26,12 +26,12 @@ export async function CashOnDeliveryController(req,res){
             })
             .filter(id => id); // Remove any null/undefined values        console.log("Seller Validation - Product IDs:", productIds);
         console.log("Seller Validation - Current User:", userId);
-        
+
         const sellerProducts = await ProductModel.find({
             _id: { $in: productIds },
             sellerId: userId
         });
-        
+
         if (sellerProducts.length > 0) {
             const sellerProductNames = sellerProducts.map(p => p.name).join(', ');
             console.log("🚫 VALIDATION FAILED - Own products detected:", sellerProductNames);
@@ -41,14 +41,14 @@ export async function CashOnDeliveryController(req,res){
                 success: false
             });
         }
-        
+
         console.log("✅ VALIDATION PASSED - No own products found");        const payload = await Promise.all(
             list_items
                 .filter(el => el?.productId) // Ensure productId exists
                 .map(async (el) => {
                     // Handle both populated productId objects and ObjectId strings
                     let productId, productName, productImage, sellerId;
-                    
+
                     if (typeof el.productId === 'object' && el.productId._id) {
                         // Populated productId object
                         productId = el.productId._id;
@@ -69,7 +69,7 @@ export async function CashOnDeliveryController(req,res){
                             sellerId = null;
                         }
                     }
-                    
+
                     return {
                         userId: userId,
                         buyerId: userId, // Add buyerId for clarity
@@ -127,7 +127,7 @@ export async function CashOnDeliveryController(req,res){
                 console.error('Error creating chat for order:', order._id, error);
             }
         });        await Promise.all(chatPromises);
-        
+
         // Get created chats for response
         const createdChats = await Promise.all(generateOrder.map(async (order) => {
             const chat = await ChatModel.findOne({
@@ -140,7 +140,7 @@ export async function CashOnDeliveryController(req,res){
                 productId: order.productId
             };
         }));
-        
+
         //remove from cart
 
         const removeCartItems=await CartProductModel.deleteMany({
@@ -209,7 +209,7 @@ export async function GetOrderDetailsController(req, res) {
 export async function ConfirmOrderController(req, res) {
     try {
         const { orderId } = req.params;
-        const sellerId = req.userId; // Assuming seller ID is stored in req user
+        const sellerId = req.userId; // Assuming seller ID is stored in req.user
 
         // Find the order
         const order = await OrderModel.findById(orderId);
@@ -235,23 +235,24 @@ export async function ConfirmOrderController(req, res) {
         order.buyer_notified = true;
         await order.save();
 
-        // UPDATE: Also update the associated chat conversation
-        const updatedChat = await ChatModel.findOneAndUpdate(
-            { orderId: orderId },
-            {
-                orderConfirmed: true,
-                orderConfirmedAt: new Date()
-            },
-            {
-                new: true,
-                populate: [
-                    { path: 'buyerId', select: 'name email avatar' },
-                    { path: 'sellerId', select: 'name email avatar' },
-                    { path: 'productId', select: 'name image price' },
-                    { path: 'orderId' }
-                ]
+        // Update the chat associated with this order to set orderConfirmed flag
+        const chat = await ChatModel.findOne({ orderId: orderId });
+        if (chat) {
+            chat.orderConfirmed = true;
+            chat.orderConfirmedAt = new Date();
+            await chat.save();
+
+            // Emit real-time order status update if socket is available
+            if (req.io) {
+                req.io.to(`chat-${chat._id}`).emit('order-status-update', {
+                    chatId: chat._id,
+                    orderConfirmed: true,
+                    orderConfirmedAt: new Date(),
+                    orderCompleted: false,
+                    message: 'Order confirmed by seller'
+                });
             }
-        );
+        }
 
         // Create in-app notification for buyer
         try {
@@ -263,21 +264,12 @@ export async function ConfirmOrderController(req, res) {
 
         // Send confirmation email to buyer
         const buyerNotified = await notifyBuyerOrderConfirmed(order);
-        
-        // Emit real-time update to both users in the chat
-        if (req.io && updatedChat) {
-            req.io.to(`chat-${updatedChat._id}`).emit('conversation-updated', {
-                chatId: updatedChat._id,
-                conversation: updatedChat,
-                type: 'order_confirmed'
-            });
-        }
 
         return res.status(200).json({
             message: "Order confirmed successfully",
             data: {
                 order: order,
-                chat: updatedChat,
+                chat: chat,
                 buyerNotified: buyerNotified
             },
             error: false,
@@ -339,7 +331,7 @@ export async function UpdateOrderStatusController(req, res) {
         let buyerNotified = false;
         if (oldStatus !== status) {
             buyerNotified = await notifyOrderStatusUpdate(order, status);
-            
+
             // If confirming order, also send confirmation email
             if (status === "confirmed" && !order.buyer_notified) {
                 await notifyBuyerOrderConfirmed(order);
@@ -371,11 +363,11 @@ export async function UpdateOrderStatusController(req, res) {
 export async function GetSellerOrdersController(req, res) {
     try {
         const sellerId = req.userId;
-        
+
         // Find all products by this seller
         const sellerProducts = await ProductModel.find({ sellerId: sellerId });
         const productIds = sellerProducts.map(product => product._id);
-        
+
         // Find all orders for these products
         const orders = await OrderModel.find({ 
             productId: { $in: productIds } 
@@ -406,19 +398,19 @@ export async function TestSellerValidationController(req, res) {
     try {
         const userId = req.userId;
         const { productIds } = req.body;
-        
+
         console.log("Test Validation - User ID:", userId);
         console.log("Test Validation - Product IDs:", productIds);
-        
+
         const sellerProducts = await ProductModel.find({
             _id: { $in: productIds },
             sellerId: userId
         });
-        
+
         const allProducts = await ProductModel.find({
             _id: { $in: productIds }
         });
-        
+
         return res.status(200).json({
             message: "Test validation completed",
             data: {
@@ -446,11 +438,11 @@ export async function TestSellerValidationController(req, res) {
     }
 }
 
-// NEW: Controller for buyers to finalize orders (mark as received)
+// Controller for buyers to finalize orders
 export async function FinalizeOrderController(req, res) {
     try {
         const { orderId } = req.params;
-        const buyerId = req.userId; // Buyer ID from auth middleware
+        const buyerId = req.userId; // Assuming buyer ID is stored in req.userId
 
         // Find the order
         const order = await OrderModel.findById(orderId);
@@ -463,7 +455,7 @@ export async function FinalizeOrderController(req, res) {
         }
 
         // Verify that the buyer is authorized to finalize this order
-        if (order.buyerId.toString() !== buyerId && order.userId.toString() !== buyerId) {
+        if (order.buyerId.toString() !== buyerId) {
             return res.status(403).json({
                 message: "You are not authorized to finalize this order",
                 error: true,
@@ -471,19 +463,10 @@ export async function FinalizeOrderController(req, res) {
             });
         }
 
-        // Check if order is already finalized
-        if (order.order_status === "delivered") {
-            return res.status(400).json({
-                message: "Order is already completed",
-                error: true,
-                success: false
-            });
-        }
-
-        // Check if order has been confirmed by seller first
+        // Verify that the order is confirmed but not yet completed
         if (order.order_status !== "confirmed") {
             return res.status(400).json({
-                message: "Order must be confirmed by seller before it can be finalized",
+                message: "Only confirmed orders can be finalized",
                 error: true,
                 success: false
             });
@@ -493,46 +476,38 @@ export async function FinalizeOrderController(req, res) {
         order.order_status = "delivered";
         await order.save();
 
-        // Update the associated chat conversation
-        const updatedChat = await ChatModel.findOneAndUpdate(
-            { orderId: orderId },
-            {
-                orderCompleted: true,
-                completedAt: new Date()
-            },
-            {
-                new: true,
-                populate: [
-                    { path: 'buyerId', select: 'name email avatar' },
-                    { path: 'sellerId', select: 'name email avatar' },
-                    { path: 'productId', select: 'name image price' },
-                    { path: 'orderId' }
-                ]
+        // Update the chat associated with this order
+        const chat = await ChatModel.findOne({ orderId: orderId });
+        if (chat) {
+            chat.orderCompleted = true;
+            chat.completedAt = new Date();
+            await chat.save();
+
+            // Emit real-time order status update if socket is available
+            if (req.io) {
+                req.io.to(`chat-${chat._id}`).emit('order-status-update', {
+                    chatId: chat._id,
+                    orderConfirmed: true,
+                    orderCompleted: true,
+                    completedAt: new Date(),
+                    message: 'Order finalized by buyer'
+                });
             }
-        );
+        }
 
         // Create in-app notification for seller
         try {
             await createOrderNotification(order, 'order_delivered', order.sellerId, req.io);
-            console.log(`Created order completion notification for seller ${order.sellerId}`);
+            console.log(`Created order delivery notification for seller ${order.sellerId}`);
         } catch (error) {
-            console.error('Error creating order completion notification:', error);
-        }
-
-        // Emit real-time update to both users in the chat
-        if (req.io && updatedChat) {
-            req.io.to(`chat-${updatedChat._id}`).emit('conversation-updated', {
-                chatId: updatedChat._id,
-                conversation: updatedChat,
-                type: 'order_completed'
-            });
+            console.error('Error creating order delivery notification:', error);
         }
 
         return res.status(200).json({
-            message: "Order completed successfully! You can now add a review.",
+            message: "Order finalized successfully",
             data: {
                 order: order,
-                chat: updatedChat
+                chat: chat
             },
             error: false,
             success: true

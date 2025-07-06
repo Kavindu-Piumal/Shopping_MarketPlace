@@ -5,9 +5,11 @@ import summaryApi from "../common/summaryApi";
 import { useNotification } from "../context/NotificationContext";
 import Loading from "../components/Loading";
 import CardProduct from "../components/CardProduct";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import validUrl from "../utils/validUrl";
 import useMobile from "../hooks/useMobile";
+import { setAllCategory, setAllSubCategory } from "../Store/ProductSlice";
+
 
 const ProductList = () => {
   const { axiosNotificationError } = useNotification();
@@ -18,12 +20,16 @@ const ProductList = () => {
   const params = useParams();
   const location = useLocation();
   const [isMobile] = useMobile();
+  const dispatch = useDispatch();
   const allsubCategory = useSelector((state) => state.product.allSubCategory);
   const [DisplaysubCategory, setDisplaysubCategory] = useState([]);
   const subCategoryName = params?.subcategory
     ?.split("-")
     .slice(0, -1)
     .join(" ");
+
+  // Get the category name from the first subcategory (if available)
+  const categoryName = DisplaysubCategory[0]?.category?.[0]?.name || "Category";
 
   // 🎯 SMART: Determine if search bar should be visible based on current route
   const shouldShowSearch = useMemo(() => {
@@ -78,8 +84,16 @@ const ProductList = () => {
 
   //console.log("params", params);
   // Add null safety checks for params
-  const categoryId = params?.category ? params.category.split("-").slice(-1)[0] : null;
-  const subCategoryId = params?.subcategory ? params.subcategory.split("-").slice(-1)[0] : null;
+  console.log("Route params:", params); // Log params to debug
+
+  const categoryId = params?.category?.split("-").slice(-1)[0] || params?.categoryId || null;
+  const subCategoryId = params?.subcategory?.split("-").slice(-1)[0] || params?.subcategoryId || null;
+
+  if (!categoryId || !subCategoryId) {
+    console.error("Missing or invalid category or subcategory ID", { categoryId, subCategoryId, params });
+    return;
+  }
+
   const fetchProductData = async () => {
     try {
       // Don't fetch if we don't have valid IDs
@@ -143,6 +157,36 @@ const ProductList = () => {
     console.log("22", subCat);
   }, [params, allsubCategory]);
 
+  // Fetch categories and subcategories if missing
+  useEffect(() => {
+    const fetchCategoriesAndSubcategories = async () => {
+      if (!allsubCategory || allsubCategory.length === 0) {
+        try {
+          // Fetch categories
+          const catRes = await Axios({
+            url: "/api/category", // Adjust endpoint as needed
+            method: "GET",
+          });
+          if (catRes.data && catRes.data.success && catRes.data.data) {
+            dispatch(setAllCategory(catRes.data.data));
+          }
+          // Fetch subcategories
+          const subCatRes = await Axios({
+            url: "/api/subcategory", // Adjust endpoint as needed
+            method: "GET",
+          });
+          if (subCatRes.data && subCatRes.data.success && subCatRes.data.data) {
+            dispatch(setAllSubCategory(subCatRes.data.data));
+          }
+        } catch (err) {
+          axiosNotificationError(err);
+        }
+      }
+    };
+    fetchCategoriesAndSubcategories();
+    // eslint-disable-next-line
+  }, [allsubCategory, dispatch]);
+
   // Remove body scroll prevention since we're using fixed positioning
   // useEffect(() => {
   //   document.body.style.overflow = 'hidden';
@@ -163,7 +207,7 @@ const ProductList = () => {
         <div className="lg:hidden mb-2 flex-shrink-0">
         <div className="bg-white rounded-xl shadow-md p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-lg text-gray-800">Categories</h2>
+            <h2 className="font-semibold text-lg text-gray-800">{categoryName}</h2>
             {/* Mobile Sort Dropdown */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500">Sort:</span>
@@ -181,7 +225,7 @@ const ProductList = () => {
                 return null;
               }
               
-              const link = `/${validUrl(s?.category[0]?.name) || ""}-${s.category[0]._id}/${validUrl(s.name) || ""}-${s._id}`;
+              const link = `/${encodeURIComponent(validUrl(s?.category[0]?.name) || "")}-${s.category[0]._id}/${encodeURIComponent(validUrl(s.name) || "")}-${s._id}`;
               const isActive = subCategoryId === s._id;
 
               return (
@@ -217,7 +261,7 @@ const ProductList = () => {
         <div className="hidden lg:block w-64 flex-shrink-0">
           <div className="bg-white rounded-xl shadow-md lg:h-full overflow-hidden flex flex-col">
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 flex-shrink-0">
-              <h2 className="font-semibold text-lg">Categories</h2>
+              <h2 className="font-semibold text-lg">{categoryName}</h2>
             </div>
             <div className="flex-1 overflow-y-auto scrollbarcustom">
               <div className="p-2">
@@ -226,7 +270,7 @@ const ProductList = () => {
                     return null;
                   }
                   
-                  const link = `/${validUrl(s?.category[0]?.name) || ""}-${s.category[0]._id}/${validUrl(s.name) || ""}-${s._id}`;
+                  const link = `/${encodeURIComponent(validUrl(s?.category[0]?.name) || "")}-${s.category[0]._id}/${encodeURIComponent(validUrl(s.name) || "")}-${s._id}`;
                   const isActive = subCategoryId === s._id;
 
                   return (

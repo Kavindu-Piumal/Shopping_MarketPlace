@@ -34,6 +34,8 @@ import ShopDetailPage from "../pages/ShopDetailPage";
 import MyShop from "../pages/MyShop";
 import ManageShops from "../pages/ManageShops";
 import AddReviewPage from "../pages/AddReviewPage";
+import TermsOfService from "../pages/TermsOfService";
+import Contact from "../pages/Contact";
 
 const router = createBrowserRouter([
   {
@@ -132,6 +134,10 @@ const router = createBrowserRouter([
         ]
       },
       {
+        path: "category/:categoryId/subcategory/:subcategoryId",
+        element: <ProductList/>
+      },
+      {
         path: "product/:product",
         element: <ProductDisplayPage/>
       },
@@ -160,6 +166,14 @@ const router = createBrowserRouter([
       {
         path: "/privacy-policy",
         element: <PrivacyPolicy/>
+      },
+      {
+        path: "terms",
+        element: <TermsOfService/>
+      },
+      {
+        path: "contact",
+        element: <Contact/>
       },
       {
         path: "/shops",

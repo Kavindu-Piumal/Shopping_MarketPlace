@@ -1,6 +1,6 @@
 import React, { use } from "react";
 import abcdef from "../assets/abcdef.jpg";
-import download from "../assets/download.png";
+import dp from "../assets/dp.jpg";
 import { useSelector } from "react-redux";
 import validUrl from "../utils/validUrl";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,7 +12,7 @@ const Home = () => {
   const categoryData = useSelector((state) => state.product.allCategory);
   const subcategoryData = useSelector((state) => state.product.allSubCategory);
   const navigate = useNavigate();
-  const handleRedirectproductList = (id, category) => {
+  const handleRedirectproductList = (categoryId) => {
     // Check if subcategoryData exists and is an array
     if (!subcategoryData || !Array.isArray(subcategoryData) || subcategoryData.length === 0) {
       console.warn("No subcategory data available for navigation");
@@ -24,7 +24,7 @@ const Home = () => {
       (subcat) =>
         subcat &&
         Array.isArray(subcat.category) &&
-        subcat.category.some((c) => c && c._id === id)
+        subcat.category.some((c) => c && c._id === categoryId)
     );
 
     // Use the first subcategory found (or handle if none found)
@@ -32,15 +32,12 @@ const Home = () => {
 
     if (!subcategory) {
       // Optionally show an error or fallback
-      console.warn("No subcategory found for category", category);
+      console.warn("No subcategory found for category", categoryId);
       return;
     }
 
-    const url = `/${validUrl(category) || ""}-${id}/${
-      validUrl(subcategory.name) || ""
-    }-${subcategory._id}`;
-    
-    // Scroll to top smoothly before navigation
+    // Use only IDs for navigation
+    const url = `/category/${categoryId}/subcategory/${subcategory._id}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     navigate(url);
   };
@@ -53,14 +50,14 @@ const Home = () => {
             !abcdef && "animate-pulse"
           }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900/20 to-emerald-800/20 z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/20 to-green-300-800/20 z-10"></div>
           <img
             src={abcdef}
             alt="Sustainable Shopping - Reused & Recycled Products"
             className="w-full h-50 object-cover rounded-2xl hidden lg:block"
           />
           <img
-            src={download}
+            src={dp}
             alt="Sustainable Shopping - Reused & Recycled Products"
             className="w-full h-50 object-cover rounded-2xl lg:hidden"
           />

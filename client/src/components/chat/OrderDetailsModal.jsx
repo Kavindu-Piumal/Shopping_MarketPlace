@@ -8,7 +8,7 @@ const OrderDetailsModal = ({ conversation, onClose, isMobile = false }) => {
     const [fullOrderData, setFullOrderData] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    if (!conversation.orderId) return null;
+    if (!conversation.orderId && !conversation.orderId?._id) return null;
 
     const order = conversation.orderId; // Assuming order details are populated
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
-import { Send, Paperclip, Smile } from 'lucide-react';
+import { Send, Smile } from 'lucide-react';
 
 const MessageInput = ({
     onSendMessage,
@@ -101,17 +101,6 @@ const MessageInput = ({
                 <div className={`flex items-end bg-gray-100 rounded-2xl border border-gray-200 focus-within:border-blue-500 transition-colors ${
                     isMobile ? 'min-h-[40px]' : 'min-h-[44px]'
                 }`}>
-                    {/* Optional: Attachment button */}
-                    <button
-                        type="button"
-                        className={`flex-shrink-0 p-2 text-gray-500 hover:text-gray-700 transition-colors ${
-                            isMobile ? 'p-2' : 'p-3'
-                        }`}
-                        disabled={disabled}
-                    >
-                        <Paperclip size={isMobile ? 16 : 18} />
-                    </button>
-
                     {/* Text Input */}
                     <textarea
                         ref={textareaRef}
@@ -120,8 +109,8 @@ const MessageInput = ({
                         onKeyPress={handleKeyPress}
                         placeholder={placeholder}
                         disabled={disabled || sending}
-                        className={`flex-1 bg-transparent border-none outline-none resize-none py-3 px-1 max-h-32 ${
-                            isMobile ? 'text-sm py-2' : ''
+                        className={`flex-1 bg-transparent border-none outline-none resize-none py-3 px-3 max-h-32 ${
+                            isMobile ? 'text-sm py-2 px-3' : ''
                         }`}
                         rows={1}
                         style={{ lineHeight: '1.4' }}

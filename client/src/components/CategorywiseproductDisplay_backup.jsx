@@ -1,4 +1,4 @@
-import React, { createRef, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import AxiosToastError from "../utils/AxiosToastError";
 import summaryApi from "../common/summaryApi";
@@ -41,7 +41,7 @@ const CategorywiseproductDisplay = ({ id, name }) => {
 
   useEffect(() => {
     fetchcategorywiseProduct();
-  }, []);
+  }, [fetchcategorywiseProduct]);
 
   const handleScrollRight = () => {
     containerRef.current.scrollLeft += 200;
@@ -65,8 +65,9 @@ const CategorywiseproductDisplay = ({ id, name }) => {
       return;
     }
 
-    const url = `/${validUrl(name) || ""}-${id}/$${validUrl(subcategory.name) || ""}-${subcategory._id}`;
-    return url
+    const url = `/${encodeURIComponent(validUrl(name) || "")}-${id}/$${encodeURIComponent(validUrl(subcategory.name) || "")}-${subcategory._id}`;
+    console.log("Generated URL:", url); // Log the generated URL for debugging
+    return url;
   };
 
   const reDirectUrl = handleRedirectproductList();

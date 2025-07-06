@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useSocket } from '../../context/SocketContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -8,24 +8,139 @@ import MessageBubble from './MessageBubble';
 import OrderControls from './OrderControls';
 import MessageInput from './MessageInput';
 import OrderDetailsModal from './OrderDetailsModal';
-import { ArrowLeft, User, Store, MoreVertical } from 'lucide-react';
+import { ArrowLeft, User, Store, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 
 const ChatWindow = ({ conversation, onBack, onUpdate, isMobile = false }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [typing, setTyping] = useState(false);
     const [showOrderDetails, setShowOrderDetails] = useState(false);
+    const [lastMessageTime, setLastMessageTime] = useState(null);
+    const [pollingInterval, setPollingInterval] = useState(null);
 
     const messagesEndRef = useRef(null);
     const user = useSelector(state => state.user);
-    const { socket, isConnected } = useSocket();
+    const { socket, isConnected, connectionStatus, manualReconnect } = useSocket();
     const { showSuccess, axiosNotificationError } = useNotification();
+
+    // Auto-refresh with polling fallback
+    const refreshMessagesRef = useRef(null);
+    const pollingIntervalRef = useRef(null);
 
     // Determine user role and other user - with safe property access
     const isUserBuyer = conversation.buyerId?._id === user._id;
     const isUserSeller = conversation.sellerId?._id === user._id;
     const otherUser = isUserBuyer ? conversation.sellerId : conversation.buyerId;
     const userRole = isUserBuyer ? 'buyer' : 'seller';
+
+    // Auto-refresh messages function
+    const refreshMessages = useCallback(async () => {
+        try {
+            const response = await Axios({
+                url: `${summaryApi.getChatMessages.url}/${conversation._id}`,
+                method: summaryApi.getChatMessages.method
+            });
+
+            if (response.data.success) {
+                const newMessages = response.data.data;
+
+                // Only update if we have new messages
+                setMessages(prevMessages => {
+                    const newMessageIds = new Set(newMessages.map(msg => msg._id));
+                    const prevMessageIds = new Set(prevMessages.map(msg => msg._id));
+
+                    // Check if there are actually new messages
+                    const hasNewMessages = newMessages.some(msg => !prevMessageIds.has(msg._id));
+
+                    if (hasNewMessages) {
+                        console.log('🔄 Auto-refresh: New messages detected');
+                        setLastMessageTime(Date.now());
+                        setTimeout(scrollToBottom, 100);
+                        return newMessages;
+                    }
+
+                    return prevMessages;
+                });
+            }
+        } catch (error) {
+            console.error('Auto-refresh error:', error);
+        }
+    }, [conversation._id]);
+
+    // Setup polling fallback when socket is disconnected
+    useEffect(() => {
+        if (!isConnected && conversation._id) {
+            console.log('🔄 Socket disconnected, starting polling fallback');
+
+            // Clear any existing polling
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+            }
+
+            // Start polling every 3 seconds when disconnected
+            pollingIntervalRef.current = setInterval(refreshMessages, 3000);
+
+            return () => {
+                if (pollingIntervalRef.current) {
+                    clearInterval(pollingIntervalRef.current);
+                }
+            };
+        } else {
+            // Clear polling when socket is connected
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+                pollingIntervalRef.current = null;
+                console.log('✅ Socket connected, stopping polling fallback');
+            }
+        }
+    }, [isConnected, conversation._id, refreshMessages]);
+
+    // Enhanced visibility change handling
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden && conversation._id) {
+                console.log('👁️ Tab visible, refreshing messages');
+                refreshMessages();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [refreshMessages, conversation._id]);
+
+    // Connection status indicator
+    const ConnectionStatusIndicator = () => {
+        if (connectionStatus === 'connected') {
+            return (
+                <div className="flex items-center gap-1 text-green-600 text-xs">
+                    <Wifi size={12} />
+                    <span>Online</span>
+                </div>
+            );
+        }
+
+        if (connectionStatus === 'reconnecting') {
+            return (
+                <div className="flex items-center gap-1 text-yellow-600 text-xs">
+                    <RefreshCw size={12} className="animate-spin" />
+                    <span>Reconnecting...</span>
+                </div>
+            );
+        }
+
+        return (
+            <div className="flex items-center gap-1 text-red-600 text-xs">
+                <WifiOff size={12} />
+                <span>Offline</span>
+                <button
+                    onClick={manualReconnect}
+                    className="text-blue-600 underline ml-1"
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    };
 
     // Scroll to bottom of messages
     const scrollToBottom = () => {
@@ -43,6 +158,7 @@ const ChatWindow = ({ conversation, onBack, onUpdate, isMobile = false }) => {
 
             if (response.data.success) {
                 setMessages(response.data.data);
+                setLastMessageTime(Date.now());
                 scrollToBottom();
             }
         } catch (error) {
@@ -76,20 +192,9 @@ const ChatWindow = ({ conversation, onBack, onUpdate, isMobile = false }) => {
                 setMessages(prev => [...prev, newMessage]);
                 scrollToBottom();
 
-                // Emit via socket for real-time delivery to receiver only
-                if (socket && isConnected) {
-                    console.log('Emitting socket message:', {
-                        chatId: conversation._id,
-                        message: newMessage,
-                        receiverId: otherUser._id
-                    }); // Debug log
-
-                    socket.emit('send-message', {
-                        chatId: conversation._id,
-                        message: newMessage,
-                        receiverId: otherUser._id
-                    });
-                }
+                // Don't emit via socket here - the backend will handle the socket emission
+                // The backend already emits 'new-message' to the receiver after saving the message
+                console.log('Message sent successfully, backend will handle socket emission');
             }
         } catch (error) {
             console.error('Error sending message:', error);
@@ -272,10 +377,19 @@ const ChatWindow = ({ conversation, onBack, onUpdate, isMobile = false }) => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* Optional: Add call or video buttons */}
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                        <MoreVertical size={18} className="text-gray-500" />
-                    </button>
+                    {/* Connection Status Indicator */}
+                    <ConnectionStatusIndicator />
+
+                    {/* Manual refresh button when offline */}
+                    {!isConnected && (
+                        <button
+                            onClick={() => refreshMessages()}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                            title="Refresh messages"
+                        >
+                            <RefreshCw size={16} className="text-gray-500" />
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -256,7 +256,7 @@ const ProductDisplayPage = () => {
             <h1 className="text-2xl font-bold text-gray-800 mb-3 leading-tight product-title-mobile">{data.name}</h1>
             <div className="flex flex-col gap-3 text-sm">
               <span className="bg-green-100 text-green-800 px-3 py-2 rounded-lg inline-block w-fit font-medium">
-                Unit: {data.unit}
+                Stock: {typeof data.stock === 'number' ? data.stock : 'N/A'}
               </span>
               {reviewStats && reviewStats.totalReviews > 0 && (
                 <div className="flex items-center gap-2">
@@ -512,6 +512,9 @@ const ProductDisplayPage = () => {
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
                 Unit: {data.unit}
+              </span>
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">
+                Stock: {typeof data.stock === 'number' ? data.stock : 'N/A'}
               </span>
               {/* Display average rating if available */}
               {reviewStats && reviewStats.totalReviews > 0 && (

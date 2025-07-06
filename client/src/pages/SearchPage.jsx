@@ -67,15 +67,15 @@ const SearchPage = () => {
   };
 
   return (
-    <section className="bg-white">
-      <div className="container mx-auto p-4">
+    <section className="bg-white min-h-screen">
+      <div className="container mx-auto p-4 min-h-[calc(100vh-80px)]">
         <p className="font-semibold">Search Results: {data.length}</p>
         <InfiniteScroll
           dataLength={data.length}
           hasMore={page < totalPage} // Only true if more pages are available
           next={fetchMoreData}
         >
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 py-5 gap-2 sm:gap-3 lg:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 py-5 gap-2 sm:gap-3 lg:gap-4 min-h-[calc(100vh-160px)]">
             {data.map((item, index) => {
               return <CardProduct data={item} key={"searchproduct" + index} />;
             })}
@@ -83,7 +83,7 @@ const SearchPage = () => {
             {
               // If no data is found, show a message
               !data[0] && !loading && (
-                <div className="col-span-5 flex flex-col items-center justify-center">
+                <div className="col-span-full flex flex-col items-center justify-center min-h-[50vh]">
                   <img src={nothing} alt="No results found" className="w-25 h-25" />
                   <p className="text-gray-500">No results found for "{searchText}"</p>
                 </div>

@@ -1,11 +1,12 @@
 import Notification from '../models/notification.model.js';
+
 // Get user notifications
 export const getUserNotificationsController = async (req, res) => {
   try {
     console.log('📥 getUserNotifications called');
     const userId = req.userId;
     console.log('👤 User ID:', userId);
-    
+
     if (!userId) {
       console.log('❌ No user ID found in request');
       return res.status(401).json({
@@ -14,7 +15,7 @@ export const getUserNotificationsController = async (req, res) => {
         success: false
       });
     }
-    
+
     const { page = 1, limit = 20 } = req.query;
     console.log('📄 Query params - page:', page, 'limit:', limit);
 
@@ -88,7 +89,7 @@ export const markNotificationAsReadController = async (req, res) => {
         userId, 
         read: false 
       });
-      
+
       console.log(`🔔 Emitting notification_updated for user ${userId}, new unread count: ${unreadCount}`);
       req.io.to(userId).emit('notification_updated', {
         notificationId,
@@ -140,7 +141,7 @@ export const markAllNotificationsAsReadController = async (req, res) => {
 export const deleteAllNotificationsController = async (req, res) => {
   try {
     const userId = req.userId;
-    
+
     console.log(`🗑️ Delete all notifications request for user: ${userId}`);
 
     const result = await Notification.deleteMany({ userId });
@@ -204,7 +205,7 @@ export const deleteNotificationController = async (req, res) => {
         userId, 
         read: false 
       });
-      
+
       console.log(`🔔 Emitting notification deleted for user ${userId}, new unread count: ${unreadCount}`);
       req.io.to(userId).emit('notification_updated', {
         notificationId,
@@ -228,44 +229,17 @@ export const deleteNotificationController = async (req, res) => {
   }
 };
 
-// Create notification (internal function)
-export const createNotification = async (data, io = null) => {
-  try {
-    console.log(`📨 Creating notification with data:`, data);
-    console.log(`📨 Notification will be sent to userId: ${data.userId}`);
-    
-    const notification = new Notification(data);
-    await notification.save();
-    
-    console.log(`✅ Notification saved to database:`, notification._id);
-    console.log(`✅ Notification recipient userId: ${notification.userId}`);
+// Helper function to create a notification and emit via socket
+export const createNotification = async (notificationData, io = null) => {
+  // Create notification in DB
+  const notification = await Notification.create(notificationData);
 
-    // Real-time notification via socket.io
-    if (io) {
-      console.log(`🔔 Emitting real-time notification to user: ${data.userId}`);
-      
-      // Get updated unread count
-      const unreadCount = await Notification.countDocuments({ 
-        userId: data.userId, 
-        read: false 
-      });
-      
-      // Emit to user's personal room
-      io.to(data.userId).emit('new_notification', {
-        notification: notification.toObject(),
-        unreadCount
-      });
-      
-      console.log(`🔔 Real-time notification emitted with unread count: ${unreadCount}`);
-    } else {
-      console.log(`⚠️ No socket.io instance available for real-time notification`);
-    }
-
-    return notification;
-  } catch (error) {
-    console.error('❌ Error creating notification:', error);
-    throw error;
+  // Emit real-time notification if socket instance is provided
+  if (io && notificationData.userId) {
+    io.to(notificationData.userId.toString()).emit('notification', notification);
   }
+
+  return notification;
 };
 
 // Helper function to create order notifications
@@ -276,7 +250,7 @@ export const createOrderNotification = async (order, type, recipientId, io = nul
     totalAmount: order.totalAmount,
     subTotalAmt: order.subTotalAmt
   });
-  
+
   const notificationMap = {
     order_placed: {
       title: 'New Order Received!',
@@ -287,19 +261,19 @@ export const createOrderNotification = async (order, type, recipientId, io = nul
     order_confirmed: {
       title: 'Order Confirmed',
       message: `Your order #${order.orderId || order._id} has been confirmed by seller`,
-      actionUrl: `/dashboard/myorders`,
+      actionUrl: `/chat?orderId=${order._id}`,
       icon: 'check-circle'
     },
     order_shipped: {
       title: 'Order Shipped',
       message: `Your order #${order.orderId || order._id} has been shipped`,
-      actionUrl: `/dashboard/myorders`,
+      actionUrl: `/chat?orderId=${order._id}`,
       icon: 'truck'
     },
     order_delivered: {
       title: 'Order Delivered',
       message: `Your order #${order.orderId || order._id} has been delivered`,
-      actionUrl: `/dashboard/myorders`,
+      actionUrl: `/chat?orderId=${order._id}&with=${order.sellerId}`,
       icon: 'check-circle'
     }
   };
@@ -342,7 +316,7 @@ export const createMessageNotification = async (chatId, message, senderId, recip
   console.log(`  - senderId: ${senderId}`);
   console.log(`  - recipientId: ${recipientId}`);
   console.log(`  - message: ${message.substring(0, 50)}...`);
-  
+
   return await createNotification({
     userId: recipientId,
     type: 'message_received',

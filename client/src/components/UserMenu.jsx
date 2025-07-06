@@ -50,7 +50,7 @@ const UserMenu = ({ close, hideTitle = false }) => {
   };
 
   return (
-    <div>
+    <div className="space-y-2">
       {!hideTitle && <div className="font-semibold">My Account</div>}
       <div className={`text-sm flex items-center gap-2 ${hideTitle ? 'mt-1' : ''}`}>
         <span className="max-w-52 text-ellipsis line-clamp-1">
@@ -172,6 +172,19 @@ const UserMenu = ({ close, hideTitle = false }) => {
           className="text-left text-red-500 font-semibold hover:underline mt-2"
         >        Log Out
         </button>
+      </div>
+      {/* Legal & Contact Links for mobile (and desktop if desired) */}
+      <Divider />
+      <div className="flex flex-col gap-2">
+        <Link to="/privacy-policy" className="text-gray-700 hover:text-emerald-700 transition-colors font-medium">
+          Privacy Policy
+        </Link>
+        <Link to="/terms" className="text-gray-700 hover:text-emerald-700 transition-colors font-medium">
+          Terms of Service
+        </Link>
+        <Link to="/contact" className="text-gray-700 hover:text-emerald-700 transition-colors font-medium">
+          Contact
+        </Link>
       </div>
     </div>
   );

@@ -90,7 +90,7 @@ const ChatPage = () => {
 
             {/* Mobile Layout */}
             {isMobile ? (
-                <div className="h-screen bg-white">
+                <div className="h-[calc(100vh-80px)] bg-white flex flex-col">
                     {showChatWindow && selectedConversation ? (
                         <ChatWindow
                             conversation={selectedConversation}
@@ -108,7 +108,7 @@ const ChatPage = () => {
                 </div>
             ) : (
                 /* Desktop Layout - Perfect viewport fit, no scrolling */
-                <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+                <div className="h-[calc(100vh-80px)] bg-gray-50 flex flex-col overflow-hidden">
                     <div className="flex-1 max-w-7xl mx-auto w-full flex flex-col p-2">
                         <div className="bg-white rounded-lg shadow-lg overflow-hidden flex-1 flex flex-col">
                             <div className="flex h-full">

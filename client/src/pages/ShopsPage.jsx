@@ -18,11 +18,9 @@ const ShopsPage = () => {
   
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [shopCategories, setShopCategories] = useState([]);
   const [pagination, setPagination] = useState({});
     const [filters, setFilters] = useState({
     search: '',
-    category: 'all',
     sortBy: 'createdAt',
     sortOrder: 'desc',
     page: 1
@@ -30,24 +28,8 @@ const ShopsPage = () => {
   });
 
   useEffect(() => {
-    fetchShopCategories();
     fetchShops();
   }, [filters]);
-
-  const fetchShopCategories = async () => {
-    try {
-      const response = await Axios({
-        url: summaryApi.getShopCategories.url,
-        method: summaryApi.getShopCategories.method
-      });
-      
-      if (response.data.success) {
-        setShopCategories(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching shop categories:', error);
-    }
-  };
 
   const fetchShops = async () => {
     try {
@@ -222,7 +204,6 @@ const ShopsPage = () => {
         <div className="p-6 pt-8">
           <div className="mb-4">
             <h3 className="text-xl font-bold text-gray-800 mb-1">{shop.name}</h3>
-            <p className="text-emerald-600 text-sm font-medium">{shop.category}</p>
             <div className="flex items-center gap-2 mt-2">
               {shop.verified && (
                 <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">✓ Verified</span>
@@ -322,19 +303,8 @@ const ShopsPage = () => {
               </div>
             </form>
 
-            {/* Category and Sort in a row on mobile */}
-            <div className="grid grid-cols-2 gap-3">
-              <select
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-              >
-                <option value="all">All Categories</option>
-                {shopCategories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-
+            {/* Sort */}
+            <div className="grid grid-cols-1 gap-3">
               <select
                 value={`${filters.sortBy}-${filters.sortOrder}`}
                 onChange={(e) => {
@@ -346,8 +316,6 @@ const ShopsPage = () => {
               >
                 <option value="createdAt-desc">Newest</option>
                 <option value="createdAt-asc">Oldest</option>
-                <option value="rating-desc">Top Rated</option>
-                <option value="totalProducts-desc">Most Products</option>
                 <option value="name-asc">A-Z</option>
                 <option value="name-desc">Z-A</option>
               </select>
@@ -385,20 +353,6 @@ const ShopsPage = () => {
               </div>
             </form>
 
-            {/* Category Filter */}
-            <div>
-              <select
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="all">All Categories</option>
-                {shopCategories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
             {/* Sort */}
             <div>
               <select
@@ -412,8 +366,6 @@ const ShopsPage = () => {
               >
                 <option value="createdAt-desc">Newest First</option>
                 <option value="createdAt-asc">Oldest First</option>
-                <option value="rating-desc">Highest Rated</option>
-                <option value="totalProducts-desc">Most Products</option>
                 <option value="name-asc">Name A-Z</option>
                 <option value="name-desc">Name Z-A</option>
               </select>
@@ -444,7 +396,6 @@ const ShopsPage = () => {
           <div>
             <p className="text-gray-600">
               Showing {shops.length} of {pagination.totalShops || 0} shops
-              {filters.category !== 'all' && ` in ${filters.category}`}
               {filters.search && ` matching "${filters.search}"`}
             </p>
           </div>

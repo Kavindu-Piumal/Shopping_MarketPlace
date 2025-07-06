@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useNotification } from '../context/NotificationContext';
 import Axios from '../utils/Axios';
@@ -22,6 +22,7 @@ const AddReviewPage = () => {
 
     const user = useSelector(state => state.user);
     const { showSuccess, showError, axiosNotificationError } = useNotification();
+    const navigate = useNavigate();
 
     // Fetch product and order details
     useEffect(() => {
@@ -45,7 +46,7 @@ const AddReviewPage = () => {
                 // Fetch order details if orderId is provided
                 if (orderId) {
                     const orderResponse = await Axios({
-                        url: `${summaryApi.getorderDetails.url}/${orderId}`,
+                        url: `${summaryApi.getorderDetails.url}?orderId=${orderId}`,
                         method: summaryApi.getorderDetails.method
                     });
 
@@ -119,9 +120,14 @@ const AddReviewPage = () => {
 
             if (response.data.success) {
                 showSuccess('Review submitted successfully!');
-                // Redirect back to orders or product page
+
+                // Set localStorage flag to indicate review has been submitted
+                const reviewStartedKey = `review_started_${productId}_${orderId}`;
+                localStorage.setItem(reviewStartedKey, 'true');
+
+                // Use client-side navigation for better UX
                 setTimeout(() => {
-                    window.location.href = '/dashboard/myorders';
+                    navigate('/dashboard/myorders');
                 }, 2000);
             }
         } catch (error) {
@@ -183,7 +189,7 @@ const AddReviewPage = () => {
                             />
                             <div className="flex-1">
                                 <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
-                                <p className="text-gray-600 mt-1">₹{product.price}</p>
+                                <p className="text-gray-600 mt-1">LKR {product.price}</p>
                                 {order && (
                                     <div className="flex items-center gap-2 mt-2">
                                         <Package size={16} className="text-green-600" />
@@ -262,10 +268,10 @@ const AddReviewPage = () => {
 
                     {/* Submit Section */}
                     <div className="p-6">
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-col xs:flex-row">
                             <button
                                 onClick={() => window.history.back()}
-                                className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors"
+                                className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors text-base xs:text-sm"
                                 disabled={submitting}
                             >
                                 Cancel
@@ -273,7 +279,7 @@ const AddReviewPage = () => {
                             <button
                                 onClick={handleSubmitReview}
                                 disabled={rating === 0 || !comment.trim() || submitting}
-                                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-base xs:text-sm"
                             >
                                 {submitting ? (
                                     <div className="flex items-center justify-center gap-2">

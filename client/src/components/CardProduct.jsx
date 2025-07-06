@@ -107,8 +107,9 @@ const CardProduct = ({ data }) => {
       <div className="mt-0 sm:mt-2 w-full flex-1 flex flex-col space-y-0 sm:space-y-1">
         <div className="w-full text-ellipsis line-clamp-2 font-semibold text-emerald-800 text-xs sm:text-sm lg:text-base leading-tight">
           {data.name}
-        </div>        <div className="w-full text-xs line-clamp-1 text-emerald-600">
-          {data.unit}
+        </div>
+        <div className="w-full text-xs line-clamp-1 text-emerald-600">
+          Stock: {typeof data.stock === 'number' ? data.stock : 'N/A'}
         </div>
         
         {/* Review Rating Display - Always reserve space for consistent card heights */}

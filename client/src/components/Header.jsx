@@ -4,7 +4,7 @@ import { useSelector, shallowEqual } from "react-redux";
 import { FaCartPlus, FaStore } from "react-icons/fa";
 import { GoTriangleDown, GoTriangleUp } from "react-icons/go";
 
-import  dp from "../assets/dp.jpg";
+import ecomart from "../assets/ecomart.jpg";
 import Search from "./Search";
 import UserMenu from "./UserMenu";
 import DisplayCartItem from "./DisplayCartItem";
@@ -135,14 +135,14 @@ const Header = React.memo(() => {
         <div className="h-full flex items-center">
           <Link to={"/"} onClick={handleCloseUserMenu} className="h-full flex justify-center items-center gap-1 lg:gap-2">
             <img
-              src={dp}
+              src={ecomart}
               alt="logo"
               height={170}
               width={60}
               className="hidden lg:block drop-shadow-md"
             />
             <img
-              src={dp}
+              src={ecomart}
               alt="logo"
               height={170}
               width={40}

@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const PrivacyPolicy = () => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     // Scroll to section if hash is present
     useEffect(() => {
@@ -16,25 +17,32 @@ const PrivacyPolicy = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-lime-50 to-green-50">
-            <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 md:px-6 py-4 sm:py-8">
+                {/* Mobile Back Button */}
+                <button
+                    className="lg:hidden flex items-center gap-2 text-emerald-700 mb-4 font-medium hover:underline"
+                    onClick={() => navigate('/user-menu-mobile')}
+                >
+                    ← Back to My Account
+                </button>
+
                 {/* Header */}
-                <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-emerald-100">
+                <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 border border-emerald-100">
                     <div className="text-center">
-                        <h1 className="text-4xl font-bold text-emerald-800 mb-4">Privacy Policy</h1>
-                        <p className="text-emerald-600 text-lg">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-emerald-800 mb-2 sm:mb-4">Privacy Policy</h1>
+                        <p className="text-emerald-600 text-base sm:text-lg">
                             Your privacy is important to us. This policy explains how we collect, use, and protect your information.
                         </p>
-                        <p className="text-sm text-emerald-500 mt-4">
+                        <p className="text-xs sm:text-sm text-emerald-500 mt-2 sm:mt-4">
                             <strong>Last Updated:</strong> June 3, 2025
                         </p>
                     </div>
                 </div>
 
                 {/* General Privacy Policy Section */}
-                <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-emerald-100">
-                    <h2 className="text-2xl font-bold text-emerald-800 mb-6">General Privacy Policy</h2>
-                    
-                    <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 border border-emerald-100">
+                    <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 mb-4 sm:mb-6">General Privacy Policy</h2>
+                    <div className="space-y-4 sm:space-y-6">
                         <section>
                             <h3 className="text-xl font-semibold text-emerald-700 mb-3">Information We Collect</h3>
                             <div className="text-gray-700 space-y-2">
@@ -80,7 +88,7 @@ const PrivacyPolicy = () => {
                 </div>
 
                 {/* Chat Communications Section */}
-                <div id="chat-communications" className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-emerald-100">
+                <div id="chat-communications" className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 border border-emerald-100">
                     <div className="flex items-center gap-3 mb-6">
                         <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -248,9 +256,9 @@ const PrivacyPolicy = () => {
                 </div>
 
                 {/* Contact Information */}
-                <div className="bg-white rounded-xl shadow-lg p-8 border border-emerald-100">
-                    <h2 className="text-2xl font-bold text-emerald-800 mb-6">Contact Information</h2>
-                    
+                <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 border border-emerald-100">
+                    <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 mb-4 sm:mb-6">Contact Information</h2>
+
                     <div className="grid md:grid-cols-2 gap-6">
                         <div className="bg-emerald-50 p-6 rounded-lg">
                             <h3 className="text-lg font-semibold text-emerald-800 mb-4">Privacy Concerns</h3>
